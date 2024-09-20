@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\02. Network">
+      <UniqueIdentifier>{48a91a01-7e23-45d1-a488-ec5e912d0f87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\03. Contents">
+      <UniqueIdentifier>{1b562aa8-9583-4d15-bfd7-0e21c4377daf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\04. Object">
+      <UniqueIdentifier>{5c767e0c-207f-4d5c-a064-9c7fd7be30f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\99. Utils">
+      <UniqueIdentifier>{d54d15e3-76b6-4df3-860b-6e018f7f44c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\01. Main">
+      <UniqueIdentifier>{9979081f-ca91-49a6-b841-4f5562b8ec93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\05. Manager">
+      <UniqueIdentifier>{41f8e35f-300e-47a5-be86-d45f53280af3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\06. Packet">
+      <UniqueIdentifier>{00e8c3fa-dcb9-4eb2-85b6-9bf861ad2582}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="TCPFighterMMO.cpp">
+      <Filter>소스 파일\01. Main</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>소스 파일\99. Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkManager.cpp">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Session.cpp">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClCompile>
+    <ClCompile Include="SerializingBuffer.h">
+      <Filter>소스 파일\99. Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="SessionManager.cpp">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClCompile>
+    <ClCompile Include="GameLogic.cpp">
+      <Filter>소스 파일\03. Contents</Filter>
+    </ClCompile>
+    <ClCompile Include="MakePacket.cpp">
+      <Filter>소스 파일\03. Contents</Filter>
+    </ClCompile>
+    <ClCompile Include="netPacketProcs.cpp">
+      <Filter>소스 파일\03. Contents</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>소스 파일\04. Object</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeManager.cpp">
+      <Filter>소스 파일\05. Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectManager.cpp">
+      <Filter>소스 파일\05. Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="ContentPacketProcessor.cpp">
+      <Filter>소스 파일\06. Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="GameSession.cpp">
+      <Filter>소스 파일\04. Object</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>소스 파일\99. Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkManager.h">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Session.h">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClInclude>
+    <ClInclude Include="CRingBuffer.h">
+      <Filter>소스 파일\99. Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SessionManager.h">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClInclude>
+    <ClInclude Include="GameLogic.h">
+      <Filter>소스 파일\03. Contents</Filter>
+    </ClInclude>
+    <ClInclude Include="MakePacket.h">
+      <Filter>소스 파일\03. Contents</Filter>
+    </ClInclude>
+    <ClInclude Include="netPacketProcs.h">
+      <Filter>소스 파일\03. Contents</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>소스 파일\04. Object</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeManager.h">
+      <Filter>소스 파일\05. Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectManager.h">
+      <Filter>소스 파일\05. Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentPacketProcessor.h">
+      <Filter>소스 파일\06. Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketDefine.h">
+      <Filter>소스 파일\06. Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="GameSession.h">
+      <Filter>소스 파일\04. Object</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
