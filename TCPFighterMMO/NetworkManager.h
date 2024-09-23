@@ -24,6 +24,7 @@ public:
     static NetworkManager* GetInstance();
 
     int netInit(IPacketProcessor* customProcessor = nullptr);
+    void netCleanUp();
     void netIOProcess();
     void netProc_Accept();
 

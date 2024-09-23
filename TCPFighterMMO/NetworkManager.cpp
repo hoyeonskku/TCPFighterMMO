@@ -1,12 +1,12 @@
+#include "pch.h"
 #include "NetworkManager.h"
 #pragma comment(lib, "ws2_32.lib")
 #include <iostream>
-#include <list>
 #include <winsock2.h>
 #define _WINSOCKAPI_
 #include <windows.h>
 #include <ws2tcpip.h>
-#include "Protocol.h"
+#include "PacketDEfine.h"
 #include "Session.h"
 #include "netPacketProcs.h"
 #include "MakePacket.h"
@@ -91,6 +91,11 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 	return 0;
 }
 
+void NetworkManager::netCleanUp()
+{
+	WSACleanup();
+}
+
 void NetworkManager::netIOProcess()
 {
 	FD_SET rSet;
@@ -98,7 +103,7 @@ void NetworkManager::netIOProcess()
 
 	SOCKADDR_IN clientAddr;
 	int addrLen = sizeof(clientAddr);
-	std::list<Session*> sessionList = SessionManager::GetInstance()->GetSessionList();
+	std::unordered_map<int, Session*> sessionList = SessionManager::GetInstance()->GetSessionMap();
 
 	int sessionListSize = sessionList.size();
 
@@ -120,8 +125,8 @@ void NetworkManager::netIOProcess()
 		FD_ZERO(&wSet);
 		for (int i = 0; i < min(64, sessionListSize); i++)
 		{
-			FD_SET((*iter)->socket, &rSet);
-			FD_SET((*iter)->socket, &wSet);
+			FD_SET((*iter).second->socket, &rSet);
+			FD_SET((*iter).second->socket, &wSet);
 			iter++;
 		}
 		sessionListSize -= 64;
@@ -137,27 +142,27 @@ void NetworkManager::netIOProcess()
 		{
 			if (it == sessionList.end())
 				break;
-			if ((*it)->socket == listenSocket)
+			if ((*it).second->socket == listenSocket)
 			{
 				it++;
 				continue;
 			}
 
-			if ((*it)->deathFlag)
+			if ((*it).second->deathFlag)
 			{
 				it++;
 				continue;
 			}
-			if (FD_ISSET((*it)->socket, &rSet))
+			if (FD_ISSET((*it).second->socket, &rSet))
 			{
 				SelectRetval--;
-				netProc_Recv(*it);
+				netProc_Recv((*it).second);
 			}
-			if (FD_ISSET((*it)->socket, &wSet) && (*it)->sendBuffer->GetUseSize() != 0)
+			if (FD_ISSET((*it).second->socket, &wSet) && (*it).second->sendBuffer->GetUseSize() != 0)
 			{
 				SelectRetval--;
-				if ((*it)->socket != INVALID_SOCKET)
-					netProc_Send(*it);
+				if ((*it).second->socket != INVALID_SOCKET)
+					netProc_Send((*it).second);
 			}
 			if (SelectRetval == 0)
 				break;
@@ -202,18 +207,18 @@ void NetworkManager::netProc_Accept()
 void NetworkManager::SendUnicast(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket)
 {
 	session->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
-	session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->wPayloadSize);
+	session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
 }
 
 void NetworkManager::SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHeader, CPacket* pPacket)
 {
-	for (auto& session : SessionManager::GetInstance()->GetSessionList())
+	for (auto& pair : SessionManager::GetInstance()->GetSessionMap())
 	{
-		if (session->deathFlag == true || session == elseSession)
+		if (pair.second->deathFlag == true || pair.second == elseSession)
 			continue;
 
-		session->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
-		session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->wPayloadSize);
+		pair.second->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
+		pair.second->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
 	}
 }
 
@@ -267,17 +272,17 @@ void NetworkManager::netProc_Recv(Session* session)
 
 			int ret = session->recvBuffer->Peek((char*)&header, sizeof(st_PACKET_HEADER));
 
-			if (session->recvBuffer->GetUseSize() < header.wPayloadSize + sizeof(st_PACKET_HEADER))
+			if (session->recvBuffer->GetUseSize() < header.bySize + sizeof(st_PACKET_HEADER))
 				break;
 
-			char* packetData = new char[header.wPayloadSize];
+			char* packetData = new char[header.bySize];
 			session->recvBuffer->MoveFront(sizeof(st_PACKET_HEADER));
 
 			// 사이즈보다 경계까지의 값이 작다면
-			if (session->recvBuffer->DirectDequeueSize() < header.wPayloadSize)
+			if (session->recvBuffer->DirectDequeueSize() < header.bySize)
 			{
 				int freeSize = session->recvBuffer->DirectDequeueSize();
-				int remainLength = header.wPayloadSize - freeSize;
+				int remainLength = header.bySize - freeSize;
 				memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), freeSize);
 				session->recvBuffer->MoveFront(freeSize);
 
@@ -287,13 +292,13 @@ void NetworkManager::netProc_Recv(Session* session)
 			// 충분히 읽을 수 있으면
 			else
 			{
-				memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), header.wPayloadSize);
-				session->recvBuffer->MoveFront(header.wPayloadSize);
+				memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), header.bySize);
+				session->recvBuffer->MoveFront(header.bySize);
 			}
 			// 패킷 처리
 			CPacket packet;
-			packet.PutData(packetData, header.wPayloadSize);
-			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.wMsgType, &packet))
+			packet.PutData(packetData, header.bySize);
+			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, &packet))
 			{
 				Disconnect(session);
 			}

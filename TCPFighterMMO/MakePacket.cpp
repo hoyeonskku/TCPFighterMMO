@@ -3,7 +3,7 @@
 #include "PacketDefine.h"
 #include "SerializingBuffer.h"
 
-void mpCreateMyCharacter(PacketHeader* pHeader, CPacket* pPacket, unsigned int id, unsigned char dir, unsigned short x, unsigned short y, unsigned char hp)
+void mpCreateMyCharacter(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned int id, unsigned char dir, unsigned short x, unsigned short y, unsigned char hp)
 {
 	// 페이로드
 	*pPacket << id;
@@ -17,7 +17,7 @@ void mpCreateMyCharacter(PacketHeader* pHeader, CPacket* pPacket, unsigned int i
 	pHeader->byType = dfPACKET_SC_CREATE_MY_CHARACTER;
 }
 
-void mpCreateOtherCharacter(PacketHeader* pHeader, CPacket* pPacket, unsigned int id, unsigned char dir, unsigned short x, unsigned short y, unsigned char hp)
+void mpCreateOtherCharacter(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned int id, unsigned char dir, unsigned short x, unsigned short y, unsigned char hp)
 {
 	// 페이로드
 	*pPacket << id;
@@ -31,7 +31,7 @@ void mpCreateOtherCharacter(PacketHeader* pHeader, CPacket* pPacket, unsigned in
 	pHeader->byType = dfPACKET_SC_CREATE_OTHER_CHARACTER;
 }
 
-void mpDelete(PacketHeader* pHeader, CPacket* pPacket, unsigned int id)
+void mpDelete(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned int id)
 {
 	// 페이로드
 	*pPacket << id;
@@ -41,7 +41,7 @@ void mpDelete(PacketHeader* pHeader, CPacket* pPacket, unsigned int id)
 	pHeader->byType = dfPACKET_SC_DELETE_CHARACTER;
 }
 
-void mpDamage(PacketHeader* pHeader, CPacket* pPacket, unsigned int attackID, unsigned int DamageID, unsigned char hp)
+void mpDamage(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned int attackID, unsigned int DamageID, unsigned char hp)
 {
 	// 페이로드
 	*pPacket << attackID;
@@ -53,7 +53,7 @@ void mpDamage(PacketHeader* pHeader, CPacket* pPacket, unsigned int attackID, un
 	pHeader->byType = dfPACKET_SC_DAMAGE;
 }
 
-void mpMoveStart(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
+void mpMoveStart(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
 {
 	// 페이로드
 	*pPacket << id;
@@ -66,7 +66,7 @@ void mpMoveStart(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, uns
 	pHeader->byType = dfPACKET_SC_MOVE_START;
 }
 
-void mpMoveStop(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
+void mpMoveStop(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
 {
 	// 페이로드
 	*pPacket << id;
@@ -79,7 +79,7 @@ void mpMoveStop(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsi
 	pHeader->byType = dfPACKET_SC_MOVE_STOP;
 }
 
-void mpAttack1(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
+void mpAttack1(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
 {
 	// 페이로드
 	*pPacket << id;
@@ -92,7 +92,7 @@ void mpAttack1(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsig
 	pHeader->byType = dfPACKET_SC_ATTACK1;
 }
 
-void mpAttack2(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
+void mpAttack2(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
 {
 	// 페이로드
 	*pPacket << id;
@@ -105,7 +105,7 @@ void mpAttack2(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsig
 	pHeader->byType = dfPACKET_SC_ATTACK2;
 }
 
-void mpAttack3(PacketHeader* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
+void mpAttack3(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id)
 {
 	// 페이로드
 	*pPacket << id;

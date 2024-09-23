@@ -71,9 +71,6 @@
     <ClCompile Include="ContentPacketProcessor.cpp">
       <Filter>소스 파일\06. Packet</Filter>
     </ClCompile>
-    <ClCompile Include="GameSession.cpp">
-      <Filter>소스 파일\04. Object</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -115,8 +112,8 @@
     <ClInclude Include="PacketDefine.h">
       <Filter>소스 파일\06. Packet</Filter>
     </ClInclude>
-    <ClInclude Include="GameSession.h">
-      <Filter>소스 파일\04. Object</Filter>
+    <ClInclude Include="Log.h">
+      <Filter>소스 파일\99. Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

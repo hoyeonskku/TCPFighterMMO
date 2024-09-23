@@ -1,5 +1,4 @@
 #pragma once
-#include <list>
 #include "Session.h"
 
 struct Player;
@@ -10,7 +9,8 @@ private:
 	SessionManager() {};
 	~SessionManager() {};
 
-	std::list<struct Session*> userSessionList;
+	std::unordered_map<int, Session*> _sessionMap;
+	std::list<int> _toDeletedSessionId;
 	void (*sessionDeleteCallback)(Session*) = nullptr;
 
 public:
@@ -21,16 +21,17 @@ public:
 	}
 
 	// 세션 제거, 삭제 시의 콜백함수를 받아옴
-	void Init(void (*deleteCallback)(Session*))
+	//void Init(void (*deleteCallback)(Session*))
+	//sessionDeleteCallback = deleteCallback;
+	void Init()
 	{
-		sessionDeleteCallback = deleteCallback;
 	}
 
 	Session* CreateSession()
 	{
 		Session* newSession = new Session;
 
-		userSessionList.push_back(newSession);
+		_sessionMap[newSession->sessionID] = newSession;
 		return newSession;
 	}
 
@@ -45,29 +46,24 @@ public:
 		delete session;
 		return true;
 	}
-
-	void DelayedSessionDelete(Session* session)
+	
+	// 세션 삭제시 플레이어 삭제 콜백을 호출
+	bool ReserveDeleteSession(Session* session)
 	{
-		session->deathFlag = true;
+
+		return true;
 	}
+
 
 	// 리스트에서 삭제할 세션을 찾아 제거하는 메서드
 	void RemoveSessions() {
-		auto it = userSessionList.begin();
-		while (it != userSessionList.end())
+		for (auto sessionId : _toDeletedSessionId)
 		{
-			if ((*it)->deathFlag)
-			{
-				DeleteSession(*it);  // 세션 삭제 및 콜백 호출
-				it = userSessionList.erase(it);  // 리스트에서 세션 제거
-			}
-			else
-			{
-				++it;  // 다음 요소로 이동
-			}
+			_sessionMap.erase(sessionId);
 		}
 	}
 
 public:
-	std::list<Session*>& GetSessionList() { return userSessionList; }
+	std::unordered_map<int, Session*>& GetSessionMap() { return _sessionMap; }
+	std::list<int>& GetDeletedSessionList() { return _toDeletedSessionId; }
 };

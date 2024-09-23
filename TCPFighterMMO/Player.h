@@ -5,6 +5,7 @@ class Player
 {
 public:
 	Session* session = nullptr;
+	DWORD sessionId;
 	short x, y;
 	char dir;
 	char hp;

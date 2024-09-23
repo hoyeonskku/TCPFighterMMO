@@ -1,5 +1,7 @@
 #pragma once
-#include <list>
+#include <unordered_map>
+
+class Player;
 
 class ObjectManager
 {
@@ -7,7 +9,7 @@ private:
 	ObjectManager() {};
 	~ObjectManager() {};
 
-	std::list<class Player*> ObjectList;
+	std::unordered_map<int, Player*> ObjectMap;
 
 public:
 	static ObjectManager* GetInstance(void)
@@ -16,7 +18,23 @@ public:
 		return &Sys;
 	}
 
+	Player* FindPlayer(int sessionID)
+	{
+		return ObjectMap[sessionID];
+	}
+
+	bool DeletePlayer(int sessionID)
+	{
+		auto it = ObjectMap.find(sessionID);
+		if (it == ObjectMap.end())
+		{
+			return false;
+		}
+		ObjectMap.erase(it);
+		return true;
+	}
+
 public:
-	std::list<Player*>& GetObjectList() { return ObjectList; }
+	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }
 	void RemovePlayers();
 };

@@ -1,10 +1,11 @@
 #pragma once
 
-class Player;
+class Session;
 class CPacket;
 
-bool netPacketProc_MoveStart(Player* pSession, CPacket* pPacket);
-bool netPacketProc_MoveStop(Player* pSession, CPacket* pPacket);
-bool netPacketProc_Attack1(Player* pSession, CPacket* pPacket);
-bool netPacketProc_Attack2(Player* pSession, CPacket* pPacket);
-bool netPacketProc_Attack3(Player* pSession, CPacket* pPacket);
+bool netPacketProc_MoveStart(Session* pSession, CPacket* pPacket);
+bool netPacketProc_MoveStop(Session* pSession, CPacket* pPacket);
+bool netPacketProc_Attack1(Session* pSession, CPacket* pPacket);
+bool netPacketProc_Attack2(Session* pSession, CPacket* pPacket);
+bool netPacketProc_Attack3(Session* pSession, CPacket* pPacket);
+

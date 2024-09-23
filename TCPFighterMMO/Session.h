@@ -1,8 +1,5 @@
 #pragma once
 #include "CRingBuffer.h"
-#include <WinSock2.h>
-#define _WINSOCKAPI_
-#include <windows.h>
 
 #define BUFFERSIZE 2048
 
@@ -24,4 +21,6 @@ struct Session
 	CRingBuffer* sendBuffer;
 	CRingBuffer* recvBuffer;
 	bool deathFlag = false;
+	DWORD dwLastRecvTime;
+	DWORD sessionID;
 };

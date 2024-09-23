@@ -131,7 +131,6 @@
   <ItemGroup>
     <ClCompile Include="ContentPacketProcessor.cpp" />
     <ClCompile Include="GameLogic.cpp" />
-    <ClCompile Include="GameSession.cpp" />
     <ClCompile Include="MakePacket.cpp" />
     <ClCompile Include="netPacketProcs.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
@@ -149,8 +148,8 @@
   <ItemGroup>
     <ClInclude Include="ContentPacketProcessor.h" />
     <ClInclude Include="CRingBuffer.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="GameLogic.h" />
-    <ClInclude Include="GameSession.h" />
     <ClInclude Include="MakePacket.h" />
     <ClInclude Include="netPacketProcs.h" />
     <ClInclude Include="NetworkManager.h" />

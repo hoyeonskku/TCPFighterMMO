@@ -11,7 +11,20 @@
 #include "ContentPacketProcessor.h"
 
 using namespace std;
-bool netPacketProc_MoveStart(Player* pPlayer, CPacket* pPacket)
+
+
+#define dfATTACK1_DAMAGE		1
+#define dfATTACK2_DAMAGE		2
+#define dfATTACK3_DAMAGE		3
+#define dfERROR_RANGE		50
+#define dfATTACK1_RANGE_X		80
+#define dfATTACK2_RANGE_X		90
+#define dfATTACK3_RANGE_X		100
+#define dfATTACK1_RANGE_Y		10
+#define dfATTACK2_RANGE_Y		10
+#define dfATTACK3_RANGE_Y		20
+
+bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 {
 	// cout << "# PACKET_RECV # SessionID:" << pPlayer->session->id << endl;
 	// cout << "dfPACKET_CS_MOVE_START # SessionID :" << pPlayer->session->id << " X : " << pPlayer->x << " Y : " << pPlayer->y << endl;
@@ -34,7 +47,7 @@ bool netPacketProc_MoveStart(Player* pPlayer, CPacket* pPacket)
 	pPlayer->x = x;
 	pPlayer->y = y;
 	// 헤더 및 페이로드 생성 및 전송
-	PacketHeader pMoveHeader;
+	st_PACKET_HEADER pMoveHeader;
 	CPacket pMovePacket;
 
 	mpMoveStart(&pMoveHeader, &pMovePacket, Direction, x, y, pPlayer->session->id);
@@ -42,7 +55,7 @@ bool netPacketProc_MoveStart(Player* pPlayer, CPacket* pPacket)
 	return true;
 }
 
-bool netPacketProc_MoveStop(Player* pPlayer, CPacket* pPacket)
+bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 {
 	// 받은 패킷 해석
 	unsigned char Direction;
@@ -66,14 +79,14 @@ bool netPacketProc_MoveStop(Player* pPlayer, CPacket* pPacket)
 	pPlayer->y = y;
 	// 헤더 및 페이로드 생성 및 전송
 	CPacket scMoveStopPacket;
-	PacketHeader scMoveStopHeader;
+	st_PACKET_HEADER scMoveStopHeader;
 	mpMoveStop(&scMoveStopHeader, &scMoveStopPacket, Direction, x, y, pPlayer->session->id);
 	NetworkManager::GetInstance()->SendBroadCast(pPlayer->session, &scMoveStopHeader, &scMoveStopPacket);
 
 	return true;
 }
 
-bool netPacketProc_Attack1(Player* pPlayer, CPacket* pPacket)
+bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 {
 	// 받은 패킷 해석
 	// cout << "# PACKET_RECV # SessionID:" << pPlayer->session->id << endl;
@@ -88,7 +101,7 @@ bool netPacketProc_Attack1(Player* pPlayer, CPacket* pPacket)
 	pPlayer->dir = Direction;
 	// 헤더 및 페이로드 생성 및 전송
 	CPacket sendAttackPacket;
-	PacketHeader sendAttackHeader;
+	st_PACKET_HEADER sendAttackHeader;
 	mpAttack1(&sendAttackHeader, &sendAttackPacket, pPlayer->dir, pPlayer->x, pPlayer->y, pPlayer->session->id);
 	NetworkManager::GetInstance()->SendBroadCast(pPlayer->session, &sendAttackHeader, &sendAttackPacket);
 	// 피격 대상 탐색
@@ -128,10 +141,10 @@ bool netPacketProc_Attack1(Player* pPlayer, CPacket* pPacket)
 	// 못찾았으면 리턴
 	if (targetPlayer == nullptr)
 		return true;
-	targetPlayer->hp -= 10;
+	targetPlayer->hp -= dfATTACK1_DAMAGE;
 	// 데미지 패킷 및 헤더 생성, 전송
 	CPacket damagePacket;
-	PacketHeader damageHeader;
+	st_PACKET_HEADER damageHeader;
 	mpDamage(&damageHeader, &damagePacket, pPlayer->session->id, targetPlayer->session->id, targetPlayer->hp);
 	NetworkManager::GetInstance()->SendBroadCast(nullptr, &damageHeader, &damagePacket);
 	// 죽은 경우
@@ -139,7 +152,7 @@ bool netPacketProc_Attack1(Player* pPlayer, CPacket* pPacket)
 	{
 		// 삭제 패킷 브로드캐스트
 		CPacket deletePacket;
-		PacketHeader deleteHeader;
+		st_PACKET_HEADER deleteHeader;
 		mpDelete(&deleteHeader, &deletePacket, targetPlayer->session->id);
 		NetworkManager::GetInstance()->SendBroadCast(nullptr, &deleteHeader, &deletePacket);
 		DisconnectByPlayer(targetPlayer);
@@ -148,7 +161,7 @@ bool netPacketProc_Attack1(Player* pPlayer, CPacket* pPacket)
 }
 
 // 아래 2, 3 코드는 위 코드와 로직 동일
-bool netPacketProc_Attack2(Player* pPlayer, CPacket* pPacket)
+bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 {
 	// 받은 패킷 해석
 	// cout << "# PACKET_RECV # SessionID:" << pPlayer->session->id << endl;
@@ -163,7 +176,7 @@ bool netPacketProc_Attack2(Player* pPlayer, CPacket* pPacket)
 	pPlayer->dir = Direction;
 	// 헤더 및 페이로드 생성 및 전송
 	CPacket sendAttackPacket;
-	PacketHeader sendAttackHeader;
+	st_PACKET_HEADER sendAttackHeader;
 	mpAttack2(&sendAttackHeader, &sendAttackPacket, pPlayer->dir, pPlayer->x, pPlayer->y, pPlayer->session->id);
 	NetworkManager::GetInstance()->SendBroadCast(pPlayer->session, &sendAttackHeader, &sendAttackPacket);
 	// 피격 대상 탐색
@@ -203,10 +216,10 @@ bool netPacketProc_Attack2(Player* pPlayer, CPacket* pPacket)
 	// 못찾았으면 리턴
 	if (targetPlayer == nullptr)
 		return true;
-	targetPlayer->hp -= 20;
+	targetPlayer->hp -= dfATTACK2_DAMAGE;
 	// 데미지 패킷 및 헤더 생성, 전송
 	CPacket damagePacket;
-	PacketHeader damageHeader;
+	st_PACKET_HEADER damageHeader;
 	mpDamage(&damageHeader, &damagePacket, pPlayer->session->id, targetPlayer->session->id, targetPlayer->hp);
 	NetworkManager::GetInstance()->SendBroadCast(nullptr, &damageHeader, &damagePacket);
 	// 죽은 경우
@@ -214,7 +227,7 @@ bool netPacketProc_Attack2(Player* pPlayer, CPacket* pPacket)
 	{
 		// 삭제 패킷 브로드캐스트
 		CPacket deletePacket;
-		PacketHeader deleteHeader;
+		st_PACKET_HEADER deleteHeader;
 		mpDelete(&deleteHeader, &deletePacket, targetPlayer->session->id);
 		NetworkManager::GetInstance()->SendBroadCast(nullptr, &deleteHeader, &deletePacket);
 		DisconnectByPlayer(targetPlayer);
@@ -222,7 +235,7 @@ bool netPacketProc_Attack2(Player* pPlayer, CPacket* pPacket)
 	return true;
 }
 
-bool netPacketProc_Attack3(Player* pPlayer, CPacket* pPacket)
+bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 {
 	// 받은 패킷 해석
 	// cout << "# PACKET_RECV # SessionID:" << pPlayer->session->id << endl;
@@ -237,7 +250,7 @@ bool netPacketProc_Attack3(Player* pPlayer, CPacket* pPacket)
 	pPlayer->dir = Direction;
 	// 헤더 및 페이로드 생성 및 전송
 	CPacket sendAttackPacket;
-	PacketHeader sendAttackHeader;
+	st_PACKET_HEADER sendAttackHeader;
 	mpAttack3(&sendAttackHeader, &sendAttackPacket, pPlayer->dir, pPlayer->x, pPlayer->y, pPlayer->session->id);
 	NetworkManager::GetInstance()->SendBroadCast(pPlayer->session, &sendAttackHeader, &sendAttackPacket);
 	// 피격 대상 탐색
@@ -277,10 +290,10 @@ bool netPacketProc_Attack3(Player* pPlayer, CPacket* pPacket)
 	// 못찾았으면 리턴
 	if (targetPlayer == nullptr)
 		return true;
-	targetPlayer->hp -= 30;
+	targetPlayer->hp -= dfATTACK3_DAMAGE;
 	// 데미지 패킷 및 헤더 생성, 전송
 	CPacket damagePacket;
-	PacketHeader damageHeader;
+	st_PACKET_HEADER damageHeader;
 	mpDamage(&damageHeader, &damagePacket, pPlayer->session->id, targetPlayer->session->id, targetPlayer->hp);
 	NetworkManager::GetInstance()->SendBroadCast(nullptr, &damageHeader, &damagePacket);
 	// 죽은 경우
@@ -288,7 +301,7 @@ bool netPacketProc_Attack3(Player* pPlayer, CPacket* pPacket)
 	{
 		// 삭제 패킷 브로드캐스트
 		CPacket deletePacket;
-		PacketHeader deleteHeader;
+		st_PACKET_HEADER deleteHeader;
 		mpDelete(&deleteHeader, &deletePacket, targetPlayer->session->id);
 		NetworkManager::GetInstance()->SendBroadCast(nullptr, &deleteHeader, &deletePacket);
 		DisconnectByPlayer(targetPlayer);
