@@ -4,7 +4,7 @@
 #include <winsock2.h>
 #include <assert.h>
 
-struct Session;
+class Session;
 struct st_PACKET_HEADER;
 struct CPacket;
 

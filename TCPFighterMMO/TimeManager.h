@@ -8,7 +8,7 @@ private:
 
 	unsigned int nextTick;
 	unsigned int oldTick;
-	int frameTime = 20;
+	int frameTime = 40;
 
 public:
 	static TimeManager* GetInstance(void)

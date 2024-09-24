@@ -50,9 +50,6 @@
     <ClCompile Include="SessionManager.cpp">
       <Filter>소스 파일\02. Network</Filter>
     </ClCompile>
-    <ClCompile Include="GameLogic.cpp">
-      <Filter>소스 파일\03. Contents</Filter>
-    </ClCompile>
     <ClCompile Include="MakePacket.cpp">
       <Filter>소스 파일\03. Contents</Filter>
     </ClCompile>
@@ -62,9 +59,6 @@
     <ClCompile Include="Player.cpp">
       <Filter>소스 파일\04. Object</Filter>
     </ClCompile>
-    <ClCompile Include="TimeManager.cpp">
-      <Filter>소스 파일\05. Manager</Filter>
-    </ClCompile>
     <ClCompile Include="ObjectManager.cpp">
       <Filter>소스 파일\05. Manager</Filter>
     </ClCompile>
@@ -73,6 +67,15 @@
     </ClCompile>
     <ClCompile Include="NetworkLogic.cpp">
       <Filter>소스 파일\03. Contents</Filter>
+    </ClCompile>
+    <ClCompile Include="SectorManager.cpp">
+      <Filter>소스 파일\05. Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="TimeManager.cpp">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Sector.cpp">
+      <Filter>소스 파일\04. Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -91,9 +94,6 @@
     <ClInclude Include="SessionManager.h">
       <Filter>소스 파일\02. Network</Filter>
     </ClInclude>
-    <ClInclude Include="GameLogic.h">
-      <Filter>소스 파일\03. Contents</Filter>
-    </ClInclude>
     <ClInclude Include="MakePacket.h">
       <Filter>소스 파일\03. Contents</Filter>
     </ClInclude>
@@ -102,9 +102,6 @@
     </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>소스 파일\04. Object</Filter>
-    </ClInclude>
-    <ClInclude Include="TimeManager.h">
-      <Filter>소스 파일\05. Manager</Filter>
     </ClInclude>
     <ClInclude Include="ObjectManager.h">
       <Filter>소스 파일\05. Manager</Filter>
@@ -120,6 +117,18 @@
     </ClInclude>
     <ClInclude Include="NetworkLogic.h">
       <Filter>소스 파일\03. Contents</Filter>
+    </ClInclude>
+    <ClInclude Include="SectorManager.h">
+      <Filter>소스 파일\05. Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeManager.h">
+      <Filter>소스 파일\02. Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Sector.h">
+      <Filter>소스 파일\04. Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Define.h">
+      <Filter>소스 파일\99. Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

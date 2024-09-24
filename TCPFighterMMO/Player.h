@@ -1,5 +1,9 @@
 #pragma once
-struct Session;
+#include "Sector.h"
+
+class Session;
+
+
 
 class Player
 {
@@ -10,6 +14,10 @@ public:
 	char dir;
 	char hp;
 	bool moveFlag = false;
+
+	SectorPos sectorPos;
+
+	void Update();
 };
 
 // 세션 매니저에 포인터로 전달할 함수

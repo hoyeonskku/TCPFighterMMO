@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "Player.h"
 #include "PacketDefine.h"
-#include "GameLogic.h"
 #include "ObjectManager.h"
 #include "SessionManager.h"
 #include "MakePacket.h"
 #include "NetworkManager.h"
 #include "SerializingBuffer.h"
+
 
 // 플레이어 생성 콜백함수
 // 세선 생성시 이 콜백함수가 실행됨
@@ -18,6 +18,8 @@ void CreatePlayer(Session* session)
 	player->dir = dfPACKET_MOVE_DIR_LL;
 	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
 	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	player->sectorPos.y = player->y % dfRANGE_SECTOR_Y;
+	player->sectorPos.x = player->x % dfRANGE_SECTOR_X;
 	player->session = session;
 
 	// 캐릭터 생성 패킷 생성
@@ -72,3 +74,40 @@ void DeletePlayer(Session* session)
 	delete player;
 }
 
+
+int direction[8][2] = { {0, -3}, {-2, -3}, {-2, 0}, {-2, 3}, {0, 3}, {2, 3}, {2, 0}, {2, -3} };
+
+void Player::Update()
+{
+	int tempX, tempY;
+	if (moveFlag == true)
+	{
+		tempY = y + direction[dir][0];
+		tempX = x + direction[dir][1];
+
+		// 범위 밖으로 벗어나면
+		if (tempX < dfRANGE_MOVE_LEFT)
+		{
+			//session->player->x = dfRANGE_MOVE_LEFT;
+			return;
+		}
+		if (tempX > dfRANGE_MOVE_RIGHT)
+		{
+			//session->player->x = dfRANGE_MOVE_RIGHT;
+			return;
+		}
+		if (tempY < dfRANGE_MOVE_TOP)
+		{
+			//session->player->y = dfRANGE_MOVE_TOP;
+			return;
+		}
+		if (tempY > dfRANGE_MOVE_BOTTOM)
+		{
+			//session->player->y = dfRANGE_MOVE_BOTTOM;
+			return;
+		}
+		// 조건에 부합하는 경우에만 값 갱신
+		y = tempY;
+		x = tempX;
+	}
+}

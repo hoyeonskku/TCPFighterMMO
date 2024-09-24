@@ -1,10 +1,11 @@
 #pragma once
 #include "CRingBuffer.h"
 
-#define BUFFERSIZE 2048
+#define BUFFERSIZE 20000
 
-struct Session
+class Session
 {
+public:
 	Session()
 	{
 		sendBuffer = new CRingBuffer(BUFFERSIZE);

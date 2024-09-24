@@ -42,5 +42,5 @@ public:
 	}
 
 public:
-	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap;}
+	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }
 };

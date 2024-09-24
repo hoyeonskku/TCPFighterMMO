@@ -12,7 +12,6 @@
 
 using namespace std;
 
-
 #define dfATTACK1_DAMAGE		10
 #define dfATTACK2_DAMAGE		20
 #define dfATTACK3_DAMAGE		30

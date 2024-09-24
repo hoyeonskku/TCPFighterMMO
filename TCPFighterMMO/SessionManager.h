@@ -1,8 +1,6 @@
 #pragma once
 #include "Session.h"
 
-struct Player;
-
 class SessionManager
 {
 private:
