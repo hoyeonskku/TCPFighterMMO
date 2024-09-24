@@ -5,7 +5,7 @@
 
 void ObjectManager::Update()
 {
-	if (TimeManager::GetInstance()->CheckFrameTime())
+	if (TimeManager::GetInstance()->CheckLogicFrameTime())
 	{
 		for (auto& pair : ObjectMap)
 			pair.second->Update();

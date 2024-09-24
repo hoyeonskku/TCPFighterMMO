@@ -10,12 +10,22 @@ void TimeManager::Init()
 	nextTick = timeGetTime();
 }
 
-bool TimeManager::CheckFrameTime()
+bool TimeManager::CheckLogicFrameTime()
 {
 	unsigned int currentTick = timeGetTime();
 	if (currentTick > nextTick)
 	{
-		nextTick += frameTime;
+		nextTick += logicFrameTime;
+		return true;
+	}
+	return false;
+}
+bool TimeManager::CheckNetworkFrameTime()
+{
+	unsigned int currentTick = timeGetTime();
+	if (currentTick > nextTick)
+	{
+		nextTick += networkFrameTime;
 		return true;
 	}
 	return false;

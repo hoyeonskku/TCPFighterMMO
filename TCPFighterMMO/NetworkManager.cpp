@@ -11,6 +11,7 @@
 #include "netPacketProcs.h"
 #include "MakePacket.h"
 #include "SessionManager.h"
+#include "TimeManager.h"
 #include "ObjectManager.h"
 #include "SerializingBuffer.h"
 
@@ -98,6 +99,10 @@ void NetworkManager::netCleanUp()
 
 void NetworkManager::netIOProcess()
 {
+	/*if (!TimeManager::GetInstance()->CheckNetworkFrameTime())
+	{
+		return;
+	}*/
 	FD_SET rSet;
 	FD_SET wSet;
 
@@ -125,6 +130,11 @@ void NetworkManager::netIOProcess()
 		FD_ZERO(&wSet);
 		for (int i = 0; i < min(64, sessionListSize); i++)
 		{
+			if ((*iter).second->socket == INVALID_SOCKET)
+			{
+				iter++;
+				continue;
+			}
 			FD_SET((*iter).second->socket, &rSet);
 			FD_SET((*iter).second->socket, &wSet);
 			iter++;
@@ -231,6 +241,7 @@ void NetworkManager::Disconnect(Session* session)
 	closesocket(session->socket);
 	session->deathFlag = true;
 	session->socket = INVALID_SOCKET;
+
 }
 
 void NetworkManager::netProc_Recv(Session* session)

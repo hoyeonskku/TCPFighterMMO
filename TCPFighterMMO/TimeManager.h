@@ -8,7 +8,8 @@ private:
 
 	unsigned int nextTick;
 	unsigned int oldTick;
-	int frameTime = 40;
+	int logicFrameTime = 40;
+	int networkFrameTime = 40;
 
 public:
 	static TimeManager* GetInstance(void)
@@ -22,7 +23,8 @@ public:
 	// 프레임 설정 함수, 기본값은 50fps임.
 	void SetFPS(int FPS)
 	{
-		frameTime = 1000 / FPS;
+		logicFrameTime = 1000 / FPS;
 	}
-	bool CheckFrameTime();
+	bool CheckLogicFrameTime();
+	bool CheckNetworkFrameTime();
 };

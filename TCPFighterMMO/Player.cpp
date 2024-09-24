@@ -17,10 +17,10 @@ void CreatePlayer(Session* session)
 	player->hp = 100;
 	player->sessionID = session->sessionID;
 	player->dir = dfPACKET_MOVE_DIR_LL;
-	//player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
-	//player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
-	player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
-	player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
+	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	//player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
+	//player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
 	player->sectorPos.y = player->y / dfRANGE_SECTOR_BOTTOM;
 	player->sectorPos.x = player->x / dfRANGE_SECTOR_RIGHT;
 	player->session = session;
@@ -84,8 +84,8 @@ void DeletePlayer(Session* session)
 	SectorManager::GetInstance()->SendAround(session, &deleteHeader, &deletePacket);
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
-	ObjectManager::GetInstance()->DeletePlayer(player);
 	SectorManager::GetInstance()->DeletePlayerInSector(player);
+	ObjectManager::GetInstance()->DeletePlayer(player);
 	delete player;
 }
 

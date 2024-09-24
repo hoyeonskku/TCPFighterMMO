@@ -14,9 +14,9 @@
 
 using namespace std;
 
-#define dfATTACK1_DAMAGE		10
-#define dfATTACK2_DAMAGE		20
-#define dfATTACK3_DAMAGE		30
+#define dfATTACK1_DAMAGE		1
+#define dfATTACK2_DAMAGE		2
+#define dfATTACK3_DAMAGE		3
 #define dfERROR_RANGE			50
 #define dfATTACK1_RANGE_X		80
 #define dfATTACK2_RANGE_X		90
