@@ -118,4 +118,16 @@ void mpAttack3(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, u
 	pHeader->byType = dfPACKET_SC_ATTACK3;
 }
 
+void mpSync(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned short x, unsigned short y, unsigned int id)
+{
+	// 페이로드
+	*pPacket << id;
+	*pPacket << x;
+	*pPacket << y;
+	//헤더
+	pHeader->byCode = 0x89;
+	pHeader->bySize = pPacket->GetDataSize();
+	pHeader->byType = dfPACKET_SC_SYNC;
+}
+
 

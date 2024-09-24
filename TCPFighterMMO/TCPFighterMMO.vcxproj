@@ -133,6 +133,7 @@
     <ClCompile Include="GameLogic.cpp" />
     <ClCompile Include="MakePacket.cpp" />
     <ClCompile Include="netPacketProcs.cpp" />
+    <ClCompile Include="NetworkLogic.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="ObjectManager.cpp" />
     <ClCompile Include="pch.cpp">
@@ -152,6 +153,7 @@
     <ClInclude Include="GameLogic.h" />
     <ClInclude Include="MakePacket.h" />
     <ClInclude Include="netPacketProcs.h" />
+    <ClInclude Include="NetworkLogic.h" />
     <ClInclude Include="NetworkManager.h" />
     <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="PacketDefine.h" />

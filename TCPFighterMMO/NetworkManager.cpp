@@ -227,6 +227,7 @@ void NetworkManager::Disconnect(Session* session)
 	if (session->deathFlag == true)
 		return;
 
+	SessionManager::GetInstance()->ReserveDeleteSession(session);
 	closesocket(session->socket);
 	session->deathFlag = true;
 	session->socket = INVALID_SOCKET;

@@ -12,6 +12,7 @@ private:
 	std::unordered_map<int, Session*> _sessionMap;
 	std::list<int> _toDeletedSessionId;
 	void (*sessionDeleteCallback)(Session*) = nullptr;
+	void (*sessionCreateCallback)(Session*) = nullptr;
 
 public:
 	static SessionManager* GetInstance(void)
@@ -20,18 +21,24 @@ public:
 		return &Sys;
 	}
 
-	// 세션 제거, 삭제 시의 콜백함수를 받아옴
-	//void Init(void (*deleteCallback)(Session*))
-	//sessionDeleteCallback = deleteCallback;
-	void Init()
+	// 세션 생성, 삭제 시의 콜백함수를 받아옴
+	void Init(void (*createCallback)(Session*), void (*deleteCallback)(Session*))
 	{
+		sessionCreateCallback = createCallback;
+		sessionDeleteCallback = deleteCallback;
 	}
+
 
 	Session* CreateSession()
 	{
 		Session* newSession = new Session;
 
+		newSession->sessionID = _id++;
 		_sessionMap[newSession->sessionID] = newSession;
+		if (sessionCreateCallback)
+		{
+			sessionCreateCallback(newSession);  // 콜백 함수 호출
+		}
 		return newSession;
 	}
 
@@ -43,14 +50,14 @@ public:
 			sessionDeleteCallback(session);  // 콜백 함수 호출
 		}
 		// 세션 삭제
+		_sessionMap.erase(session->sessionID);
 		delete session;
 		return true;
 	}
 	
-	// 세션 삭제시 플레이어 삭제 콜백을 호출
 	bool ReserveDeleteSession(Session* session)
 	{
-
+		_toDeletedSessionId.push_back(session->sessionID);
 		return true;
 	}
 
@@ -59,11 +66,14 @@ public:
 	void RemoveSessions() {
 		for (auto sessionId : _toDeletedSessionId)
 		{
+			DeleteSession(_sessionMap[sessionId]);
 			_sessionMap.erase(sessionId);
 		}
+		_toDeletedSessionId.clear();
 	}
 
 public:
 	std::unordered_map<int, Session*>& GetSessionMap() { return _sessionMap; }
 	std::list<int>& GetDeletedSessionList() { return _toDeletedSessionId; }
+	int _id = 0;
 };

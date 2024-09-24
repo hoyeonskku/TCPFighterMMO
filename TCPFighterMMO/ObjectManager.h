@@ -20,7 +20,14 @@ public:
 
 	Player* FindPlayer(int sessionID)
 	{
-		return ObjectMap[sessionID];
+		const auto& it = ObjectMap.find(sessionID);
+
+		if (it != ObjectMap.end())
+		{
+			return it->second;
+		}
+
+		return nullptr;
 	}
 
 	bool DeletePlayer(int sessionID)
@@ -35,6 +42,5 @@ public:
 	}
 
 public:
-	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }
-	void RemovePlayers();
+	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap;}
 };

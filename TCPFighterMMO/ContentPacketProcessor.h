@@ -4,6 +4,7 @@
 #include "netPacketProcs.h"
 #include "Session.h"
 #include "SerializingBuffer.h"
+#include "NetworkManager.h"
 
 class ContentPacketProcessor : public IPacketProcessor
 {
@@ -34,13 +35,9 @@ public:
 		{
 			return netPacketProc_Attack3(session, packetData);
 		}
-		case dfPACKET_SC_SYNC:
-		{
-			break;
-		}
 		default:
 		{
-			DisconnectByPlayer(session->player);
+			NetworkManager::GetInstance()->Disconnect(session);
 			return false;
 		}
 		}

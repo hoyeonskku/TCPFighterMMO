@@ -18,7 +18,7 @@ public:
 	}
 
 public:
-	void TimeInit();
+	void Init();
 	// 프레임 설정 함수, 기본값은 50fps임.
 	void SetFPS(int FPS)
 	{

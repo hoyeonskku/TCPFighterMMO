@@ -1,9 +1,10 @@
+#include "pch.h"
 #include "TimeManager.h"
 #include <Windows.h>
 #include <iostream>
 #pragma comment(lib, "winmm.lib")
 
-void TimeManager::TimeInit()
+void TimeManager::Init()
 {
 	timeBeginPeriod(1);
 	nextTick = timeGetTime();

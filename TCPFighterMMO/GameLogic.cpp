@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "GameLogic.h"
 #include "Session.h"
 #include "SessionManager.h"
@@ -50,6 +51,4 @@ void Update()
 			pair.second->x = tempX;
 		}
 	}
-
-	ObjectManager::GetInstance()->RemovePlayers();
 }
