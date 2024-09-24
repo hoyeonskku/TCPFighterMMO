@@ -12,7 +12,7 @@ public:
 	// 패킷 처리 함수
 	// 주의! 점프 테이블 생성을 위한 순서 보장해주기
 	virtual ~ContentPacketProcessor() {}
-	bool ProcessPacket(Session* session, char packetType, CPacket* packetData) {
+	bool ProcessPacket(Session* session, unsigned char packetType, CPacket* packetData) {
 		switch (packetType)
 		{
 		case dfPACKET_CS_MOVE_START:
@@ -34,6 +34,10 @@ public:
 		case dfPACKET_CS_ATTACK3:
 		{
 			return netPacketProc_Attack3(session, packetData);
+		}
+		case dfPACKET_CS_ECHO:
+		{
+			return netPacketProc_Echo(session, packetData);
 		}
 		default:
 		{

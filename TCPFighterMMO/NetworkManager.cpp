@@ -65,7 +65,7 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 		return 0;
 	}
 	else
-		printf("bind OK # Port:6000\n");
+		printf("bind OK # Port:11190\n");
 
 	u_long on = 1;
 	IoctlsocketRetval = ::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET;

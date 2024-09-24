@@ -3,6 +3,7 @@
 #include "PacketDefine.h"
 #include "ObjectManager.h"
 #include "SessionManager.h"
+#include "SectorManager.h"
 #include "MakePacket.h"
 #include "NetworkManager.h"
 #include "SerializingBuffer.h"
@@ -16,10 +17,12 @@ void CreatePlayer(Session* session)
 	player->hp = 100;
 	player->sessionID = session->sessionID;
 	player->dir = dfPACKET_MOVE_DIR_LL;
-	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
-	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
-	player->sectorPos.y = player->y % dfRANGE_SECTOR_Y;
-	player->sectorPos.x = player->x % dfRANGE_SECTOR_X;
+	//player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
+	//player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
+	player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	player->sectorPos.y = player->y / dfRANGE_SECTOR_BOTTOM;
+	player->sectorPos.x = player->x / dfRANGE_SECTOR_RIGHT;
 	player->session = session;
 
 	// 캐릭터 생성 패킷 생성
@@ -29,34 +32,45 @@ void CreatePlayer(Session* session)
 
 	// 내 캐릭터 생성
 	NetworkManager::GetInstance()->SendUnicast(session, &CreateMyCharacterHeader, &CreateMyCharacterPacket);
+	ObjectManager::GetInstance()->AddPlayer(player);
 
 	CPacket BroadcastMyCharacterToOthersPacket;
 	st_PACKET_HEADER BroadcastMyCharacterToOthersHeader;
 	mpCreateOtherCharacter(&BroadcastMyCharacterToOthersHeader, &BroadcastMyCharacterToOthersPacket, session->sessionID, player->dir, player->x, player->y, player->hp);
 
 	// 내 캐릭터 생성 전파
-	NetworkManager::GetInstance()->SendBroadCast(session, &BroadcastMyCharacterToOthersHeader, &BroadcastMyCharacterToOthersPacket);
+	SectorManager::GetInstance()->SendAround(session, &BroadcastMyCharacterToOthersHeader, &BroadcastMyCharacterToOthersPacket);
+
+	int direction[9][2] = { {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, 0} };
 
 	// 다른 캐릭터 생성
-	for (auto& pair : ObjectManager::GetInstance()->GetObjectMap())
+	for (int i = 0; i < 9; i++)
 	{
-		Player* otherPlayer = pair.second;
-		CPacket CreateOtherCharacterPacket;
-		st_PACKET_HEADER CreateOtherCharacterHeader;
-		mpCreateOtherCharacter(&CreateOtherCharacterHeader, &CreateOtherCharacterPacket, otherPlayer->session->sessionID, otherPlayer->dir, otherPlayer->x, otherPlayer->y, otherPlayer->hp);
-		NetworkManager::GetInstance()->SendUnicast(session, &CreateOtherCharacterHeader, &CreateOtherCharacterPacket);
-		// 움직이는 플레이어인 경우 무브 패킷도 보내줌
-		if (otherPlayer->moveFlag == true)
+		int dy = player->sectorPos.y + direction[i][0];
+		int dx = player->sectorPos.x + direction[i][1];
+		if (dy < 0 || dy >= dfRANGE_SECTOR_Y || dx < 0 || dx >= dfRANGE_SECTOR_X)
+			continue;
+		const auto& playerUMap = SectorManager::GetInstance()->GetSectorPlayerMap(dy, dx);
+		
+		for (auto& pair : playerUMap)
 		{
-			st_PACKET_HEADER pMoveHeader;
-			CPacket pMovePacket;
+			CPacket CreateOtherCharacterPacket;
+			st_PACKET_HEADER CreateOtherCharacterHeader;
+			mpCreateOtherCharacter(&CreateOtherCharacterHeader, &CreateOtherCharacterPacket, pair.second->session->sessionID, pair.second->dir, pair.second->x, pair.second->y, pair.second->hp);
+			NetworkManager::GetInstance()->SendUnicast(session, &CreateOtherCharacterHeader, &CreateOtherCharacterPacket);
+			// 움직이는 플레이어인 경우 무브 패킷도 보내줌
+			if (pair.second->moveFlag == true)
+			{
+				st_PACKET_HEADER pMoveHeader;
+				CPacket pMovePacket;
 
-			mpMoveStart(&pMoveHeader, &pMovePacket, otherPlayer->dir, otherPlayer->x, otherPlayer->y, otherPlayer->session->sessionID);
-			NetworkManager::GetInstance()->SendUnicast(session, &pMoveHeader, &pMovePacket);
+				mpMoveStart(&pMoveHeader, &pMovePacket, pair.second->dir, pair.second->x, pair.second->y, pair.second->session->sessionID);
+				NetworkManager::GetInstance()->SendUnicast(session, &pMoveHeader, &pMovePacket);
+			}
 		}
 	}
-	const auto& map = ObjectManager::GetInstance()->GetObjectMap();
-	ObjectManager::GetInstance()->GetObjectMap().insert(std::make_pair(session->sessionID, player));
+
+	SectorManager::GetInstance()->InsertPlayerInSector(player);
 	return;
 }
 
@@ -67,18 +81,19 @@ void DeletePlayer(Session* session)
 	CPacket deletePacket;
 	st_PACKET_HEADER deleteHeader;
 	mpDelete(&deleteHeader, &deletePacket, session->sessionID);
-	NetworkManager::GetInstance()->SendBroadCast(session, &deleteHeader, &deletePacket);
-	ObjectManager::GetInstance()->DeletePlayer(session->sessionID);
+	SectorManager::GetInstance()->SendAround(session, &deleteHeader, &deletePacket);
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	ObjectManager::GetInstance()->DeletePlayer(player);
+	SectorManager::GetInstance()->DeletePlayerInSector(player);
 	delete player;
 }
 
 
-int direction[8][2] = { {0, -3}, {-2, -3}, {-2, 0}, {-2, 3}, {0, 3}, {2, 3}, {2, 0}, {2, -3} };
 
 void Player::Update()
 {
+	int direction[8][2] = { {0, -6}, {-4, -6}, {-4, 0}, {-4, 6}, {0, 6}, {4, 6}, {4, 0}, {4, -6} };
 	int tempX, tempY;
 	if (moveFlag == true)
 	{
@@ -109,5 +124,6 @@ void Player::Update()
 		// 조건에 부합하는 경우에만 값 갱신
 		y = tempY;
 		x = tempX;
+		SectorManager::GetInstance()->SectorMove(this);
 	}
 }

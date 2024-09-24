@@ -2,20 +2,28 @@
 #include "Sector.h"
 
 class Player;
+class CPacket;
+class Session;
+struct st_PACKET_HEADER;
 
 class SectorManager
 {
-public:
+private:
 	SectorManager() { };
 	~SectorManager() { };
+public:
+	static SectorManager* GetInstance(void)
+	{
+		static SectorManager Sys;
+		return &Sys;
+	}
 	void Init();
-	void LogicUpdate();
-	void LifeCycleUpdate();
-	void ContentsUpdate();
-
-	void SendSectorToCreateBuffer(char* packet, int size, int x, int y);
-	void SendSectorToLifeCycleBuffer(char* packet, int size, int x, int y);
+	void SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int x, int y, Session* elseSession = nullptr);
+	void SendAround(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket, bool bSendMe = false);
 	void SectorMove(Player* player);
+	void InsertPlayerInSector(Player* player);
+	void DeletePlayerInSector(Player* player);
+	std::unordered_map<int, Player*>& GetSectorPlayerMap(int y, int x);
 	SectorPos FindSectorPos(int x, int y);
 
 private:

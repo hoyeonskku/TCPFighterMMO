@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
+#include "Player.h"
 
-class Player;
 
 class ObjectManager
 {
@@ -30,9 +30,20 @@ public:
 		return nullptr;
 	}
 
-	bool DeletePlayer(int sessionID)
+	bool AddPlayer(Player* player)
 	{
-		auto it = ObjectMap.find(sessionID);
+		auto it = ObjectMap.find(player->sessionID);
+		if (it != ObjectMap.end())
+		{
+			return false;
+		}
+		ObjectMap.insert(std::make_pair(player->sessionID, player));
+		return true;
+	}
+
+	bool DeletePlayer(Player* player)
+	{
+		auto it = ObjectMap.find(player->sessionID);
 		if (it == ObjectMap.end())
 		{
 			return false;
@@ -40,6 +51,8 @@ public:
 		ObjectMap.erase(it);
 		return true;
 	}
+
+	void Update();
 
 public:
 	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }

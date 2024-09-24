@@ -130,4 +130,14 @@ void mpSync(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned short x, unsig
 	pHeader->byType = dfPACKET_SC_SYNC;
 }
 
+void mpEcho(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned int id)
+{
+	// 페이로드
+	*pPacket << id;
+	//헤더
+	pHeader->byCode = 0x89;
+	pHeader->bySize = pPacket->GetDataSize();
+	pHeader->byType = dfPACKET_SC_ECHO;
+}
+
 

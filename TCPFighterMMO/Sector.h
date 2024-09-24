@@ -6,8 +6,10 @@ class Player;
 
 struct SectorPos
 {
-	short x;
+	SectorPos() {};
+	SectorPos(int y, int x) : y(y), x(x) {};
 	short y;
+	short x;
 };
 
 class Sector
@@ -15,21 +17,13 @@ class Sector
 public:
 	Sector()
 	{
-		contentsBuffer = new CRingBuffer(RINGBUFFERSIZE);
-		lifeCycleBuffer = new CRingBuffer(RINGBUFFERSIZE);
 	}
 	~Sector()
 	{
-		delete contentsBuffer;
-		delete lifeCycleBuffer;
 	}
-	CRingBuffer* contentsBuffer;
-	CRingBuffer* lifeCycleBuffer;
 
 	int x;
 	int y;
 	std::unordered_map<int, Player*> _playerMap;
-	std::list<Player*> _createBufferMap;
-	std::list<Player*> _deleteBufferMap;
 };
 

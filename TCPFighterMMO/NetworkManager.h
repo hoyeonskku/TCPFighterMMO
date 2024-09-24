@@ -1,17 +1,17 @@
 #pragma once
-#define SERVERPORT 6000
+#define SERVERPORT 11190
 #include <list>
 #include <winsock2.h>
 #include <assert.h>
 
 class Session;
 struct st_PACKET_HEADER;
-struct CPacket;
+class CPacket;
 
 class IPacketProcessor
 {
 public:
-    virtual bool ProcessPacket(Session* session, char packetType, CPacket* packetData) = 0;
+    virtual bool ProcessPacket(Session* session, unsigned char packetType, CPacket* packetData) = 0;
     virtual ~IPacketProcessor() = default;
 };
 

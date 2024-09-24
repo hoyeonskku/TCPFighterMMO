@@ -1,11 +1,6 @@
 #ifndef __PROTOCOL__
 #define __PROTOCOL__
 
-
-#define dfNETWORK_PORT		20000
-
-
-
 struct st_PACKET_HEADER
 {
 	BYTE	byCode;			// 패킷코드 0x89 고정.

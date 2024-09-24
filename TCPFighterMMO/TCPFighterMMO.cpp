@@ -1,8 +1,9 @@
 ﻿#pragma once
 #include "pch.h"
-#include "GameLogic.h"
+#include "ObjectManager.h"
 #include "NetworkManager.h"
 #include "SessionManager.h"
+#include "SectorManager.h"
 #include "TimeManager.h"
 #include "ContentPacketProcessor.h"
 #include "Player.h"
@@ -15,6 +16,7 @@ int main()
 	// 패킷 처리 함수 오버로딩을 위한 의존성 주입
 	NetworkManager::GetInstance()->netInit(new ContentPacketProcessor);
 	SessionManager::GetInstance()->Init(CreatePlayer, DeletePlayer);
+	SectorManager::GetInstance()->Init();
 	TimeManager::GetInstance()->Init();
 
 	while (!g_bShutdown)
@@ -22,7 +24,7 @@ int main()
 		try
 		{
 			NetworkManager::GetInstance()->netIOProcess();
-			Update();
+			ObjectManager::GetInstance()->Update();
 		}
 		catch (const std::runtime_error& e)
 		{
