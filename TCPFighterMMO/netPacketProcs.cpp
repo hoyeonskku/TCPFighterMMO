@@ -135,10 +135,10 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 	}
 
 	// 공격 범위에 속하는 섹터 좌표 찾기
-	int startSectorX = leftUpX / dfRANGE_SECTOR_RIGHT;
-	int startSectorY = leftUpY / dfRANGE_SECTOR_BOTTOM;
-	int endSectorX = rightDownX / dfRANGE_SECTOR_RIGHT;
-	int endSectorY = rightDownY / dfRANGE_SECTOR_BOTTOM;
+	int startSectorX = max(leftUpX / dfRANGE_SECTOR_RIGHT, 0);
+	int startSectorY = max(leftUpY / dfRANGE_SECTOR_BOTTOM, 0);
+	int endSectorX = min(rightDownX / dfRANGE_SECTOR_RIGHT, dfRANGE_SECTOR_X - 1);
+	int endSectorY = min(rightDownY / dfRANGE_SECTOR_BOTTOM, dfRANGE_SECTOR_Y - 1);
 
 	// 걸치는 섹터 범위를 순회
 	for (int sectorX = startSectorX; sectorX <= endSectorX; ++sectorX)
@@ -228,10 +228,10 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 	}
 
 	// 공격 범위에 속하는 섹터 좌표 찾기
-	int startSectorX = leftUpX / dfRANGE_SECTOR_RIGHT;
-	int startSectorY = leftUpY / dfRANGE_SECTOR_BOTTOM;
-	int endSectorX = rightDownX / dfRANGE_SECTOR_RIGHT;
-	int endSectorY = rightDownY / dfRANGE_SECTOR_BOTTOM;
+	int startSectorX = max(leftUpX / dfRANGE_SECTOR_RIGHT, 0);
+	int startSectorY = max(leftUpY / dfRANGE_SECTOR_BOTTOM, 0);
+	int endSectorX = min(rightDownX / dfRANGE_SECTOR_RIGHT, dfRANGE_SECTOR_X - 1);
+	int endSectorY = min(rightDownY / dfRANGE_SECTOR_BOTTOM, dfRANGE_SECTOR_Y - 1);
 
 	// 걸치는 섹터 범위를 순회
 	for (int sectorX = startSectorX; sectorX <= endSectorX; ++sectorX)
@@ -322,10 +322,10 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 	}
 
 	// 공격 범위에 속하는 섹터 좌표 찾기
-	int startSectorX = leftUpX / dfRANGE_SECTOR_RIGHT;
-	int startSectorY = leftUpY / dfRANGE_SECTOR_BOTTOM;
-	int endSectorX = rightDownX / dfRANGE_SECTOR_RIGHT;
-	int endSectorY = rightDownY / dfRANGE_SECTOR_BOTTOM;
+	int startSectorX = max(leftUpX / dfRANGE_SECTOR_RIGHT, 0);
+	int startSectorY = max(leftUpY / dfRANGE_SECTOR_BOTTOM, 0);
+	int endSectorX = min(rightDownX / dfRANGE_SECTOR_RIGHT, dfRANGE_SECTOR_X - 1);
+	int endSectorY = min(rightDownY / dfRANGE_SECTOR_BOTTOM, dfRANGE_SECTOR_Y - 1);
 
 	// 걸치는 섹터 범위를 순회
 	for (int sectorX = startSectorX; sectorX <= endSectorX; ++sectorX)
