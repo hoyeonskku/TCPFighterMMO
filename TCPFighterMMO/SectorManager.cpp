@@ -24,7 +24,6 @@ void SectorManager::Init()
     }
 }
 
-
 void SectorManager::SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int x, int y, Session* elseSession)
 {
     for (auto& pair : _sectorArray[y][x]->_playerMap)
@@ -34,6 +33,7 @@ void SectorManager::SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int 
         NetworkManager::GetInstance()->SendUnicast(pair.second->session, pHeader, pPacket);
     }
 }
+
 void SectorManager::SendAround(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket, bool bSendMe)
 {
     int direction[9][2] = { {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, 0} };
@@ -43,8 +43,6 @@ void SectorManager::SendAround(Session* session, st_PACKET_HEADER* pHeader, CPac
     {
         int dy = player->sectorPos.y + direction[i][0];
         int dx = player->sectorPos.x + direction[i][1];
-
-        if (dy >= 0 && dy < dfRANGE_SECTOR_Y && dx >= 0 && dx < dfRANGE_SECTOR_X)
         {
             if (bSendMe == false)
                 SendSector(pHeader, pPacket, dx, dy, session);
@@ -177,9 +175,9 @@ void SectorManager::SectorMove(Player* player)
         }
         case 1: // (1, 1) 아래오른
         {
-            createSectorList.push_back(SectorPos(nextSectorPos.y - 1, nextSectorPos.x + 2));
-            createSectorList.push_back(SectorPos(nextSectorPos.y, nextSectorPos.x + 2));
-            createSectorList.push_back(SectorPos(nextSectorPos.y + 1, nextSectorPos.x + 2));
+            createSectorList.push_back(SectorPos(nextSectorPos.y - 1, nextSectorPos.x + 1));
+            createSectorList.push_back(SectorPos(nextSectorPos.y, nextSectorPos.x + 1));
+            createSectorList.push_back(SectorPos(nextSectorPos.y + 1, nextSectorPos.x + 1));
             createSectorList.push_back(SectorPos(nextSectorPos.y + 1, nextSectorPos.x));
             createSectorList.push_back(SectorPos(nextSectorPos.y + 1, nextSectorPos.x - 1));
 
@@ -210,7 +208,6 @@ void SectorManager::SectorMove(Player* player)
     mpMoveStart(&pMoveHeader, &pMovePacket, player->dir, player->x, player->y, player->session->sessionID);
     for (SectorPos& pos : createSectorList)
     {
-        if (pos.x >= 0 && pos.x < dfRANGE_SECTOR_X && pos.y >= 0 && pos.y < dfRANGE_SECTOR_Y)
         {
             SendSector(&playerCreateHeader, &playerCreatePacket, pos.x, pos.y, player->session);
             SendSector(&pMoveHeader, &pMovePacket, pos.x, pos.y, player->session);
@@ -235,7 +232,6 @@ void SectorManager::SectorMove(Player* player)
     }
     for (SectorPos& pos : deleteSectorList)
     {
-        if (pos.x >= 0 && pos.x < dfRANGE_SECTOR_X && pos.y >= 0 && pos.y < dfRANGE_SECTOR_Y)
         {
             SendSector(&playerDeleteHeader, &playerDeletePacket, pos.x, pos.y, player->session);
             for (auto& pair : _sectorArray[pos.y][pos.x]->_playerMap)
@@ -256,6 +252,7 @@ void SectorManager::InsertPlayerInSector(Player* player)
 {
     _sectorArray[player->sectorPos.y][player->sectorPos.x]->_playerMap.insert(std::make_pair(player->sessionID, player));
 }
+
 void SectorManager::DeletePlayerInSector(Player* player)
 {
     _sectorArray[player->sectorPos.y][player->sectorPos.x]->_playerMap.erase(player->sessionID);
@@ -266,8 +263,8 @@ std::unordered_map<int, Player*>& SectorManager::GetSectorPlayerMap(int y, int x
     return _sectorArray[y][x]->_playerMap;
 }
 
-SectorPos SectorManager::FindSectorPos(int x, int y)
+SectorPos SectorManager::FindSectorPos(int y, int x)
 {
-    SectorPos pos(y / dfRANGE_SECTOR_BOTTOM, x / dfRANGE_SECTOR_RIGHT);
+    SectorPos pos(y / dfRANGE_SECTOR_BOTTOM + 1, x / dfRANGE_SECTOR_RIGHT + 1);
     return pos; 
 }

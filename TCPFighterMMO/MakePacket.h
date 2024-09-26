@@ -13,4 +13,4 @@ void mpAttack1(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, u
 void mpAttack2(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id);
 void mpAttack3(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned char dir, unsigned short x, unsigned short y, unsigned int id);
 void mpSync(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned short x, unsigned short y, unsigned int id);
-void mpEcho(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned int id);
+void mpEcho(st_PACKET_HEADER* pHeader, CPacket* pPacket, unsigned int time);

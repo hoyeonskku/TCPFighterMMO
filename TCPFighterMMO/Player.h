@@ -3,8 +3,6 @@
 
 class Session;
 
-
-
 class Player
 {
 public:
@@ -16,6 +14,7 @@ public:
 	bool moveFlag = false;
 
 	SectorPos sectorPos;
+	DWORD lastProcTime;
 
 	void Update();
 };

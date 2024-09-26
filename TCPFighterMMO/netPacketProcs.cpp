@@ -11,6 +11,7 @@
 #include "SerializingBuffer.h"
 #include "ContentPacketProcessor.h"
 #include "NetworkLogic.h"
+#include "TimeManager.h"
 
 using namespace std;
 
@@ -37,6 +38,7 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
 
+	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	*pPacket >> Direction >> x >> y;
 	// 클라이언트 좌표에 대한 최소한의 에러체크
 	if ((abs(x - player->x) > dfERROR_RANGE) ||
@@ -61,6 +63,7 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 {
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	// 받은 패킷 해석
 	unsigned char Direction;
 	unsigned short x;
@@ -184,6 +187,7 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 {
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 
 	unsigned char Direction = 0;
 	unsigned short x = 0;
@@ -278,6 +282,7 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 {
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 
 	unsigned char Direction = 0;
 	unsigned short x = 0;
@@ -371,12 +376,16 @@ bool netPacketProc_Echo(Session* session, CPacket* packet)
 {
 	CPacket sendEchoPacket;
 	st_PACKET_HEADER sendEchoHeader;
-	unsigned int id;
+	unsigned int time;
 
-	*packet >> id;
+	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
+
+	*packet >> time;
 
 	// 헤더 및 페이로드 생성 및 전송
-	mpEcho(&sendEchoHeader, &sendEchoPacket, id);
+	mpEcho(&sendEchoHeader, &sendEchoPacket, time);
+	NetworkManager::GetInstance()->SendUnicast(session, &sendEchoHeader, &sendEchoPacket);
 	return true;
 }
 

@@ -7,7 +7,7 @@
 #include "MakePacket.h"
 #include "NetworkManager.h"
 #include "SerializingBuffer.h"
-
+#include "TimeManager.h"
 
 // 플레이어 생성 콜백함수
 // 세선 생성시 이 콜백함수가 실행됨
@@ -17,13 +17,15 @@ void CreatePlayer(Session* session)
 	player->hp = 100;
 	player->sessionID = session->sessionID;
 	player->dir = dfPACKET_MOVE_DIR_LL;
-	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
-	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP - 1;
+	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT - 1;
 	//player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
 	//player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
-	player->sectorPos.y = player->y / dfRANGE_SECTOR_BOTTOM;
-	player->sectorPos.x = player->x / dfRANGE_SECTOR_RIGHT;
+	SectorPos pos = SectorManager::GetInstance()->FindSectorPos(player->y, player->x);
+	player->sectorPos.y = pos.y;
+	player->sectorPos.x = pos.x;
 	player->session = session;
+	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 
 	// 캐릭터 생성 패킷 생성
 	CPacket CreateMyCharacterPacket;
@@ -48,8 +50,6 @@ void CreatePlayer(Session* session)
 	{
 		int dy = player->sectorPos.y + direction[i][0];
 		int dx = player->sectorPos.x + direction[i][1];
-		if (dy < 0 || dy >= dfRANGE_SECTOR_Y || dx < 0 || dx >= dfRANGE_SECTOR_X)
-			continue;
 		const auto& playerUMap = SectorManager::GetInstance()->GetSectorPlayerMap(dy, dx);
 		
 		for (auto& pair : playerUMap)
@@ -74,7 +74,6 @@ void CreatePlayer(Session* session)
 	return;
 }
 
-
 // 이걸 세션 삭제시에 콜백으로 던짐
 void DeletePlayer(Session* session)
 {
@@ -89,10 +88,14 @@ void DeletePlayer(Session* session)
 	delete player;
 }
 
-
-
 void Player::Update()
 {
+	DWORD currentTick = TimeManager::GetInstance()->GetCurrentTick();
+	if (currentTick - lastProcTime >= dfNETWORK_PACKET_RECV_TIMEOUT)
+	{
+		NetworkManager::GetInstance()->Disconnect(session);
+		return;
+	}
 	int direction[8][2] = { {0, -6}, {-4, -6}, {-4, 0}, {-4, 6}, {0, 6}, {4, 6}, {4, 0}, {4, -6} };
 	int tempX, tempY;
 	if (moveFlag == true)
@@ -106,7 +109,7 @@ void Player::Update()
 			//session->player->x = dfRANGE_MOVE_LEFT;
 			return;
 		}
-		if (tempX > dfRANGE_MOVE_RIGHT)
+		if (tempX >= dfRANGE_MOVE_RIGHT)
 		{
 			//session->player->x = dfRANGE_MOVE_RIGHT;
 			return;
@@ -116,7 +119,7 @@ void Player::Update()
 			//session->player->y = dfRANGE_MOVE_TOP;
 			return;
 		}
-		if (tempY > dfRANGE_MOVE_BOTTOM)
+		if (tempY >= dfRANGE_MOVE_BOTTOM)
 		{
 			//session->player->y = dfRANGE_MOVE_BOTTOM;
 			return;

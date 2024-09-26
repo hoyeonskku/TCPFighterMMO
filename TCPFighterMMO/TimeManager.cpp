@@ -30,3 +30,13 @@ bool TimeManager::CheckNetworkFrameTime()
 	}
 	return false;
 }
+
+void TimeManager::SetCurrentTick()
+{
+	currentTick = timeGetTime();
+}
+
+unsigned int TimeManager::GetCurrentTick()
+{
+	return currentTick;
+}

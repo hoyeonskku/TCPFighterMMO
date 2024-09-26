@@ -8,6 +8,7 @@ private:
 
 	unsigned int nextTick;
 	unsigned int oldTick;
+	unsigned int currentTick;
 	int logicFrameTime = 40;
 	int networkFrameTime = 40;
 
@@ -27,4 +28,6 @@ public:
 	}
 	bool CheckLogicFrameTime();
 	bool CheckNetworkFrameTime();
+	void SetCurrentTick();
+	unsigned int GetCurrentTick();
 };

@@ -78,8 +78,8 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 		return 0;
 	}
 
-	//ListenRetval = ::listen(listenSocket, SOMAXCONN_HINT(65535));
-	ListenRetval = ::listen(listenSocket, SOMAXCONN);
+	ListenRetval = ::listen(listenSocket, SOMAXCONN_HINT(65535));
+	//ListenRetval = ::listen(listenSocket, SOMAXCONN);
 	if (ListenRetval == SOCKET_ERROR)
 	{
 		printf("listen Error!\n");

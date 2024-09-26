@@ -1,7 +1,7 @@
 #pragma once
 #include "CRingBuffer.h"
 
-#define BUFFERSIZE 20000
+#define BUFFERSIZE 2048
 
 class Session
 {
