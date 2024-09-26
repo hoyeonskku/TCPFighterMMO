@@ -17,6 +17,8 @@ public:
 	DWORD lastProcTime;
 
 	void Update();
+
+	void Clear(){};
 };
 
 // 세션 매니저에 포인터로 전달할 함수

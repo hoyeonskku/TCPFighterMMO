@@ -77,6 +77,9 @@
     <ClCompile Include="Sector.cpp">
       <Filter>소스 파일\04. Object</Filter>
     </ClCompile>
+    <ClCompile Include="SerializingBufferManager.cpp">
+      <Filter>소스 파일\05. Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -129,6 +132,12 @@
     </ClInclude>
     <ClInclude Include="Define.h">
       <Filter>소스 파일\99. Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CObjectPool.h">
+      <Filter>소스 파일\99. Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SerializingBufferManager.h">
+      <Filter>소스 파일\05. Manager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -66,7 +66,7 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 		return 0;
 	}
 	else
-		printf("bind OK # Port:11190\n");
+		printf("bind OK # Port:20000\n");
 
 	u_long on = 1;
 	IoctlsocketRetval = ::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET;
@@ -327,6 +327,9 @@ void NetworkManager::netProc_Send(Session* session)
 	int SendError;
 	// 보내야 할 데이터 크기 확인
 	int dataSize = session->sendBuffer->GetUseSize();
+
+	if (session->socket == INVALID_SOCKET)
+		return;
 
 	// 경계를 안넘는 경우
 	if (session->sendBuffer->DirectDequeueSize() >= dataSize)

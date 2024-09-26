@@ -7,13 +7,15 @@
 #include "MakePacket.h"
 #include "NetworkManager.h"
 #include "SerializingBuffer.h"
+#include "SerializingBufferManager.h"
 #include "TimeManager.h"
 
 // 플레이어 생성 콜백함수
 // 세선 생성시 이 콜백함수가 실행됨
 void CreatePlayer(Session* session)
 {
-	Player* player = new Player;
+	Player* player = ObjectManager::GetInstance()->playerPool.Alloc();
+	player->Clear();
 	player->hp = 100;
 	player->sessionID = session->sessionID;
 	player->dir = dfPACKET_MOVE_DIR_LL;
@@ -28,20 +30,24 @@ void CreatePlayer(Session* session)
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 
 	// 캐릭터 생성 패킷 생성
-	CPacket CreateMyCharacterPacket;
+	CPacket* CreateMyCharacterPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	CreateMyCharacterPacket->Clear();
 	st_PACKET_HEADER CreateMyCharacterHeader;
-	mpCreateMyCharacter(&CreateMyCharacterHeader, &CreateMyCharacterPacket, session->sessionID, player->dir, player->x, player->y, player->hp);
+	mpCreateMyCharacter(&CreateMyCharacterHeader, CreateMyCharacterPacket, session->sessionID, player->dir, player->x, player->y, player->hp);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(CreateMyCharacterPacket);
 
 	// 내 캐릭터 생성
-	NetworkManager::GetInstance()->SendUnicast(session, &CreateMyCharacterHeader, &CreateMyCharacterPacket);
+	NetworkManager::GetInstance()->SendUnicast(session, &CreateMyCharacterHeader, CreateMyCharacterPacket);
 	ObjectManager::GetInstance()->AddPlayer(player);
 
-	CPacket BroadcastMyCharacterToOthersPacket;
+	CPacket* BroadcastMyCharacterToOthersPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	BroadcastMyCharacterToOthersPacket->Clear();
 	st_PACKET_HEADER BroadcastMyCharacterToOthersHeader;
-	mpCreateOtherCharacter(&BroadcastMyCharacterToOthersHeader, &BroadcastMyCharacterToOthersPacket, session->sessionID, player->dir, player->x, player->y, player->hp);
+	mpCreateOtherCharacter(&BroadcastMyCharacterToOthersHeader, BroadcastMyCharacterToOthersPacket, session->sessionID, player->dir, player->x, player->y, player->hp);
 
 	// 내 캐릭터 생성 전파
-	SectorManager::GetInstance()->SendAround(session, &BroadcastMyCharacterToOthersHeader, &BroadcastMyCharacterToOthersPacket);
+	SectorManager::GetInstance()->SendAround(session, &BroadcastMyCharacterToOthersHeader, BroadcastMyCharacterToOthersPacket);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(BroadcastMyCharacterToOthersPacket);
 
 	int direction[9][2] = { {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, 0} };
 
@@ -54,18 +60,22 @@ void CreatePlayer(Session* session)
 		
 		for (auto& pair : playerUMap)
 		{
-			CPacket CreateOtherCharacterPacket;
+			CPacket* CreateOtherCharacterPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+			CreateOtherCharacterPacket->Clear();
 			st_PACKET_HEADER CreateOtherCharacterHeader;
-			mpCreateOtherCharacter(&CreateOtherCharacterHeader, &CreateOtherCharacterPacket, pair.second->session->sessionID, pair.second->dir, pair.second->x, pair.second->y, pair.second->hp);
-			NetworkManager::GetInstance()->SendUnicast(session, &CreateOtherCharacterHeader, &CreateOtherCharacterPacket);
+			mpCreateOtherCharacter(&CreateOtherCharacterHeader, CreateOtherCharacterPacket, pair.second->session->sessionID, pair.second->dir, pair.second->x, pair.second->y, pair.second->hp);
+			NetworkManager::GetInstance()->SendUnicast(session, &CreateOtherCharacterHeader, CreateOtherCharacterPacket);
+			SerializingBufferManager::GetInstance()->_cPacketPool.Free(BroadcastMyCharacterToOthersPacket);
 			// 움직이는 플레이어인 경우 무브 패킷도 보내줌
 			if (pair.second->moveFlag == true)
 			{
 				st_PACKET_HEADER pMoveHeader;
-				CPacket pMovePacket;
 
-				mpMoveStart(&pMoveHeader, &pMovePacket, pair.second->dir, pair.second->x, pair.second->y, pair.second->session->sessionID);
-				NetworkManager::GetInstance()->SendUnicast(session, &pMoveHeader, &pMovePacket);
+				CPacket* pMovePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+				pMovePacket->Clear();
+				mpMoveStart(&pMoveHeader, pMovePacket, pair.second->dir, pair.second->x, pair.second->y, pair.second->session->sessionID);
+				NetworkManager::GetInstance()->SendUnicast(session, &pMoveHeader, pMovePacket);
+				SerializingBufferManager::GetInstance()->_cPacketPool.Free(pMovePacket);
 			}
 		}
 	}
@@ -77,15 +87,17 @@ void CreatePlayer(Session* session)
 // 이걸 세션 삭제시에 콜백으로 던짐
 void DeletePlayer(Session* session)
 {
-	CPacket deletePacket;
+	CPacket* deletePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	deletePacket->Clear();
 	st_PACKET_HEADER deleteHeader;
-	mpDelete(&deleteHeader, &deletePacket, session->sessionID);
-	SectorManager::GetInstance()->SendAround(session, &deleteHeader, &deletePacket);
+	mpDelete(&deleteHeader, deletePacket, session->sessionID);
+	SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
 	SectorManager::GetInstance()->DeletePlayerInSector(player);
 	ObjectManager::GetInstance()->DeletePlayer(player);
-	delete player;
+	ObjectManager::GetInstance()->playerPool.Free(player);
 }
 
 void Player::Update()

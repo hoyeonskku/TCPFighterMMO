@@ -9,6 +9,7 @@
 #include "SectorManager.h"
 #include "ObjectManager.h"
 #include "SerializingBuffer.h"
+#include "SerializingBufferManager.h"
 #include "ContentPacketProcessor.h"
 #include "NetworkLogic.h"
 #include "TimeManager.h"
@@ -52,10 +53,11 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	player->y = y;
 	// 헤더 및 페이로드 생성 및 전송
 	st_PACKET_HEADER pMoveHeader;
-	CPacket pMovePacket;
-
-	mpMoveStart(&pMoveHeader, &pMovePacket, Direction, player->x, player->y, player->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &pMoveHeader, &pMovePacket);
+	CPacket* pMovePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	pMovePacket->Clear();
+	mpMoveStart(&pMoveHeader, pMovePacket, Direction, player->x, player->y, player->sessionID);
+	SectorManager::GetInstance()->SendAround(player->session, &pMoveHeader, pMovePacket);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(pMovePacket);
 	return true;
 }
 
@@ -83,10 +85,12 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 	player->moveFlag = false;
 	player->dir = Direction;
 	// 헤더 및 페이로드 생성 및 전송
-	CPacket scMoveStopPacket;
+	CPacket* scMoveStopPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	scMoveStopPacket->Clear();
 	st_PACKET_HEADER scMoveStopHeader;
-	mpMoveStop(&scMoveStopHeader, &scMoveStopPacket, Direction, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &scMoveStopHeader, &scMoveStopPacket);
+	mpMoveStop(&scMoveStopHeader,scMoveStopPacket, Direction, player->x, player->y, session->sessionID);
+	SectorManager::GetInstance()->SendAround(player->session, &scMoveStopHeader, scMoveStopPacket);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(scMoveStopPacket);
 
 	return true;
 }
@@ -103,10 +107,12 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 
 	player->dir = Direction;
 	// 헤더 및 페이로드 생성 및 전송
-	CPacket sendAttackPacket;
+	CPacket* sendAttackPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	sendAttackPacket->Clear();
 	st_PACKET_HEADER sendAttackHeader;
-	mpAttack1(&sendAttackHeader, &sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, &sendAttackPacket);
+	mpAttack1(&sendAttackHeader, sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
+	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, sendAttackPacket);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendAttackPacket);
 	// 피격 대상 탐색
 	Player* targetPlayer = nullptr;
 	int leftUpY;
@@ -161,18 +167,22 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 					targetPlayer = pair.second;
 					targetPlayer->hp -= dfATTACK1_DAMAGE;
 					// 데미지 패킷 및 헤더 생성, 전송
-					CPacket damagePacket;
+					CPacket* damagePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+					damagePacket->Clear();
 					st_PACKET_HEADER damageHeader;
-					mpDamage(&damageHeader, &damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
-					SectorManager::GetInstance()->SendAround(session, &damageHeader, &damagePacket, true);
+					mpDamage(&damageHeader, damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
+					SectorManager::GetInstance()->SendAround(session, &damageHeader, damagePacket, true);
+					SerializingBufferManager::GetInstance()->_cPacketPool.Free(damagePacket);
 					// 죽은 경우
 					if (targetPlayer->hp <= 0)
 					{
 						// 삭제 패킷 브로드캐스트
-						CPacket deletePacket;
+						CPacket* deletePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+						deletePacket->Clear();
 						st_PACKET_HEADER deleteHeader;
-						mpDelete(&deleteHeader, &deletePacket, targetPlayer->session->sessionID);
-						SectorManager::GetInstance()->SendAround(session, &deleteHeader, &deletePacket, true);
+						mpDelete(&deleteHeader, deletePacket, targetPlayer->session->sessionID);
+						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
+						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
 					}
 					return true;
@@ -197,10 +207,12 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 
 	player->dir = Direction;
 	// 헤더 및 페이로드 생성 및 전송
-	CPacket sendAttackPacket;
+	CPacket* sendAttackPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	sendAttackPacket->Clear();
 	st_PACKET_HEADER sendAttackHeader;
-	mpAttack2(&sendAttackHeader, &sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, &sendAttackPacket);
+	mpAttack2(&sendAttackHeader, sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
+	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, sendAttackPacket);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendAttackPacket);
 	// 피격 대상 탐색
 	Player* targetPlayer = nullptr;
 	int leftUpY;
@@ -255,18 +267,22 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 					targetPlayer = pair.second;
 					targetPlayer->hp -= dfATTACK2_DAMAGE;
 					// 데미지 패킷 및 헤더 생성, 전송
-					CPacket damagePacket;
+					CPacket* damagePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+					damagePacket->Clear();
 					st_PACKET_HEADER damageHeader;
-					mpDamage(&damageHeader, &damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
-					SectorManager::GetInstance()->SendAround(session, &damageHeader, &damagePacket, true);
+					mpDamage(&damageHeader, damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
+					SectorManager::GetInstance()->SendAround(session, &damageHeader, damagePacket, true);
+					SerializingBufferManager::GetInstance()->_cPacketPool.Free(damagePacket);
 					// 죽은 경우
 					if (targetPlayer->hp <= 0)
 					{
 						// 삭제 패킷 브로드캐스트
-						CPacket deletePacket;
+						CPacket* deletePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+						deletePacket->Clear();
 						st_PACKET_HEADER deleteHeader;
-						mpDelete(&deleteHeader, &deletePacket, targetPlayer->session->sessionID);
-						SectorManager::GetInstance()->SendAround(session, &deleteHeader, &deletePacket, true);
+						mpDelete(&deleteHeader, deletePacket, targetPlayer->session->sessionID);
+						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
+						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
 					}
 					return true;
@@ -292,10 +308,12 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 
 	player->dir = Direction;
 	// 헤더 및 페이로드 생성 및 전송
-	CPacket sendAttackPacket;
+	CPacket* sendAttackPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	sendAttackPacket->Clear();
 	st_PACKET_HEADER sendAttackHeader;
-	mpAttack3(&sendAttackHeader, &sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, &sendAttackPacket);
+	mpAttack3(&sendAttackHeader, sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
+	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, sendAttackPacket);
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendAttackPacket);
 	// 피격 대상 탐색
 	Player* targetPlayer = nullptr;
 	int leftUpY;
@@ -350,18 +368,22 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 					targetPlayer = pair.second;
 					targetPlayer->hp -= dfATTACK3_DAMAGE;
 					// 데미지 패킷 및 헤더 생성, 전송
-					CPacket damagePacket;
+					CPacket* damagePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+					damagePacket->Clear();
 					st_PACKET_HEADER damageHeader;
-					mpDamage(&damageHeader, &damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
-					SectorManager::GetInstance()->SendAround(session, &damageHeader, &damagePacket, true);
+					mpDamage(&damageHeader, damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
+					SectorManager::GetInstance()->SendAround(session, &damageHeader, damagePacket, true);
+					SerializingBufferManager::GetInstance()->_cPacketPool.Free(damagePacket);
 					// 죽은 경우
 					if (targetPlayer->hp <= 0)
 					{
 						// 삭제 패킷 브로드캐스트
-						CPacket deletePacket;
+						CPacket* deletePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+						deletePacket->Clear();
 						st_PACKET_HEADER deleteHeader;
-						mpDelete(&deleteHeader, &deletePacket, targetPlayer->session->sessionID);
-						SectorManager::GetInstance()->SendAround(session, &deleteHeader, &deletePacket, true);
+						mpDelete(&deleteHeader, deletePacket, targetPlayer->session->sessionID);
+						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
+						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
 					}
 					return true;
@@ -374,7 +396,8 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 
 bool netPacketProc_Echo(Session* session, CPacket* packet)
 {
-	CPacket sendEchoPacket;
+	CPacket* sendEchoPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+	sendEchoPacket->Clear();
 	st_PACKET_HEADER sendEchoHeader;
 	unsigned int time;
 
@@ -384,8 +407,10 @@ bool netPacketProc_Echo(Session* session, CPacket* packet)
 	*packet >> time;
 
 	// 헤더 및 페이로드 생성 및 전송
-	mpEcho(&sendEchoHeader, &sendEchoPacket, time);
-	NetworkManager::GetInstance()->SendUnicast(session, &sendEchoHeader, &sendEchoPacket);
+	mpEcho(&sendEchoHeader, sendEchoPacket, time);
+	NetworkManager::GetInstance()->SendUnicast(session, &sendEchoHeader, sendEchoPacket);
+
+	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendEchoPacket);
 	return true;
 }
 

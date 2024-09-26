@@ -24,4 +24,10 @@ public:
 	bool deathFlag = false;
 	DWORD dwLastRecvTime;
 	DWORD sessionID;
+
+	void Clear()
+	{
+		sendBuffer->ClearBuffer();
+		recvBuffer->ClearBuffer();
+	}
 };

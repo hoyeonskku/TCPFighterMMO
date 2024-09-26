@@ -1,5 +1,6 @@
 #pragma once
 #include "Session.h"
+#include "CObjectPool.h"
 
 class SessionManager
 {
@@ -9,6 +10,7 @@ private:
 
 	std::unordered_map<int, Session*> _sessionMap;
 	std::list<int> _toDeletedSessionId;
+	CMemoryPool<Session, true> sessionPool = CMemoryPool<Session, true>(0);
 	void (*sessionDeleteCallback)(Session*) = nullptr;
 	void (*sessionCreateCallback)(Session*) = nullptr;
 
@@ -29,7 +31,8 @@ public:
 
 	Session* CreateSession()
 	{
-		Session* newSession = new Session;
+		Session* newSession = sessionPool.Alloc();
+		newSession->Clear();
 
 		newSession->sessionID = _id++;
 		_sessionMap[newSession->sessionID] = newSession;
@@ -49,7 +52,7 @@ public:
 		}
 		// 세션 삭제
 		_sessionMap.erase(session->sessionID);
-		delete session;
+		sessionPool.Free(session);
 		return true;
 	}
 	

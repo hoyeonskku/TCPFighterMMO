@@ -103,20 +103,9 @@ public:
 	//
 	// Return:
 	//////////////////////////////////////////////////////////////////////////
-	CPacket() : CPacket(eBUFFER_DEFAULT)
-	{
-	}
+	CPacket() : _capacity(eBUFFER_DEFAULT) {}
 
-	CPacket(int iBufferSize)
-	{
-		_capacity = iBufferSize;
-		_buffer = new char[iBufferSize];
-	}
-
-	virtual	~CPacket()
-	{
-		delete[] _buffer;
-	}
+	~CPacket()	{	}
 
 
 	//////////////////////////////////////////////////////////////////////////
@@ -476,7 +465,7 @@ public:
 	}
 
 protected:
-	char* _buffer;
+	char _buffer[eBUFFER_DEFAULT];
 	int _rear = 0;
 	int _front = 0;
 	int _capacity;

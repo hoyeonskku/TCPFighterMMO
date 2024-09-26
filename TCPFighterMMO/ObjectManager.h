@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include "Player.h"
+#include "CObjectPool.h"
 
 
 class ObjectManager
@@ -53,6 +54,8 @@ public:
 	}
 
 	void Update();
+
+	CMemoryPool<Player, true> playerPool = CMemoryPool<Player, true>(0);
 
 public:
 	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }
