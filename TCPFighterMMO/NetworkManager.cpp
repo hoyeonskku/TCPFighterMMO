@@ -108,7 +108,7 @@ void NetworkManager::netIOProcess()
 
 	SOCKADDR_IN clientAddr;
 	int addrLen = sizeof(clientAddr);
-	std::unordered_map<int, Session*> sessionList = SessionManager::GetInstance()->GetSessionMap();
+	std::unordered_map<int, Session*>& sessionList = SessionManager::GetInstance()->GetSessionMap();
 
 	int sessionListSize = sessionList.size();
 
