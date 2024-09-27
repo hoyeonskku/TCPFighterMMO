@@ -10,7 +10,7 @@ private:
 	unsigned int oldTick;
 	unsigned int currentTick;
 	int logicFrameTime = 40;
-	int networkFrameTime = 40;
+	int networkFrameTime = 3;
 
 public:
 	static TimeManager* GetInstance(void)

@@ -21,7 +21,6 @@ public:
 	char ip[16];
 	CRingBuffer* sendBuffer;
 	CRingBuffer* recvBuffer;
-	bool deathFlag = false;
 	DWORD dwLastRecvTime;
 	DWORD sessionID;
 

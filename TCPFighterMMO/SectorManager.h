@@ -24,7 +24,7 @@ public:
 	void InsertPlayerInSector(Player* player);
 	void DeletePlayerInSector(Player* player);
 	std::unordered_map<int, Player*>& GetSectorPlayerMap(int y, int x);
-	SectorPos FindSectorPos(int x, int y);
+	SectorPos FindSectorPos(int y, int x);
 
 private:
 	Sector*** _sectorArray;

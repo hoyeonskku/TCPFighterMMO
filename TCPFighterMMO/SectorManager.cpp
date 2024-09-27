@@ -55,7 +55,7 @@ void SectorManager::SendAround(Session* session, st_PACKET_HEADER* pHeader, CPac
 
 void SectorManager::SectorMove(Player* player)
 {
-    SectorPos nextSectorPos = FindSectorPos(player->x, player->y);
+    SectorPos nextSectorPos = FindSectorPos(player->y, player->x);
     if (nextSectorPos.x == player->sectorPos.x && nextSectorPos.y == player->sectorPos.y)
         return;
 

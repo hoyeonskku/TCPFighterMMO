@@ -158,7 +158,7 @@ void NetworkManager::netIOProcess()
 				continue;
 			}
 
-			if ((*it).second->deathFlag)
+			if ((*it).second->socket == INVALID_SOCKET)
 			{
 				it++;
 				continue;
@@ -180,12 +180,12 @@ void NetworkManager::netIOProcess()
 		}
 	}
 
-	FD_ZERO(&rSet);
-	FD_SET(listenSocket, &rSet);
-	SelectRetval = select(0, &rSet, nullptr, nullptr, &timeout);
+	//FD_ZERO(&rSet);
+	//FD_SET(listenSocket, &rSet);
+	//SelectRetval = select(0, &rSet, nullptr, nullptr, &timeout);
 
 	// 리슨소켓이 리드셋에 있는 경우 accept 요청이 있음.
-	if (FD_ISSET(listenSocket, &rSet))
+	//if (FD_ISSET(listenSocket, &rSet))
 		netProc_Accept();
 
 	SessionManager::GetInstance()->RemoveSessions();
@@ -196,22 +196,28 @@ void NetworkManager::netProc_Accept()
 	char addr_str[INET_ADDRSTRLEN];
 	SOCKADDR_IN clientaddr;
 	int addrlen = sizeof(clientaddr);
-	SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
-	if (clientSock == INVALID_SOCKET)
+	while (true)
 	{
-		std::cout << "accept() error" << std::endl;
-		std::cout << WSAGetLastError() << std::endl;
-		DebugBreak();
-		g_bShutdown = false;
-		return;
-	}
-	// 세션 생성
-	Session* session = SessionManager::GetInstance()->CreateSession();
-	session->socket = clientSock;
+		SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
+		if (clientSock == INVALID_SOCKET)
+		{
+			if (WSAGetLastError() == WSAEWOULDBLOCK) 
+				// 더 이상 처리할 클라이언트가 없으므로 루프 종료
+				break;
+			std::cout << "accept() error" << std::endl;
+			std::cout << WSAGetLastError() << std::endl;
+			DebugBreak();
+			g_bShutdown = false;
+			return;
+		}
+		// 세션 생성
+		Session* session = SessionManager::GetInstance()->CreateSession();
+		session->socket = clientSock;
 
-	inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
-	session->port = ntohs(clientaddr.sin_port);
-	strcpy_s(session->ip, sizeof(session->ip), addr_str);
+		inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
+		session->port = ntohs(clientaddr.sin_port);
+		strcpy_s(session->ip, sizeof(session->ip), addr_str);
+	}
 }
 
 void NetworkManager::SendUnicast(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket)
@@ -224,7 +230,7 @@ void NetworkManager::SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHead
 {
 	for (auto& pair : SessionManager::GetInstance()->GetSessionMap())
 	{
-		if (pair.second->deathFlag == true || pair.second == elseSession)
+		if (pair.second->socket == INVALID_SOCKET || pair.second == elseSession)
 			continue;
 
 		pair.second->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
@@ -234,14 +240,12 @@ void NetworkManager::SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHead
 
 void NetworkManager::Disconnect(Session* session)
 {
-	if (session->deathFlag == true)
+	if (session->socket == INVALID_SOCKET)
 		return;
 
 	SessionManager::GetInstance()->ReserveDeleteSession(session);
 	closesocket(session->socket);
-	session->deathFlag = true;
 	session->socket = INVALID_SOCKET;
-
 }
 
 void NetworkManager::netProc_Recv(Session* session)
