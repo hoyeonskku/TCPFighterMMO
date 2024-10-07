@@ -38,7 +38,6 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	unsigned short y;
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
-
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	*pPacket >> Direction >> x >> y;
 	// 클라이언트 좌표에 대한 최소한의 에러체크
@@ -47,10 +46,13 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	{
 		SynchronizePos(player);
 	}
+	else
+	{
+		player->x = x;
+		player->y = y;
+	}
 	player->moveFlag = true;
 	player->dir = Direction;
-	player->x = x;
-	player->y = y;
 	// 헤더 및 페이로드 생성 및 전송
 	st_PACKET_HEADER pMoveHeader;
 	CPacket* pMovePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
@@ -71,7 +73,6 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 	unsigned short x;
 	unsigned short y;
 
-
 	*pPacket >> Direction >> x >> y;
 
 	// cout << "# PACKET_RECV # SessionID:" << player->session->id << endl;
@@ -81,6 +82,11 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 		(abs(y - player->y) > dfERROR_RANGE))
 	{
 		SynchronizePos(player);
+	}
+	else
+	{
+		player->x = x;
+		player->y = y;
 	}
 	player->moveFlag = false;
 	player->dir = Direction;
@@ -98,7 +104,7 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 {
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
-
+	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	unsigned char Direction = 0;
 	unsigned short x = 0;
 	unsigned short y = 0;
@@ -156,16 +162,16 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 		for (int sectorY = startSectorY; sectorY <= endSectorY; ++sectorY)
 		{
 			// 각 섹터의 객체들을 순회하며 대상 찾기
-			const auto& playerUMap = SectorManager::GetInstance()->GetSectorPlayerMap(sectorY, sectorX);
-			for (auto& pair : playerUMap)
+			const auto& playerUSet = SectorManager::GetInstance()->GetSectorPlayerSet(sectorY, sectorX);
+			for (Player* searchedPlayer : playerUSet)
 			{
-				if (pair.second == player)
+				if (searchedPlayer == player)
 					continue;
 				// 대상이 공격 범위 안에 있는지 확인
-				if (pair.second->x >= leftUpX && pair.second->x <= rightDownX &&
-					pair.second->y >= leftUpY && pair.second->y <= rightDownY)
+				if (searchedPlayer->x >= leftUpX && searchedPlayer->x <= rightDownX &&
+					searchedPlayer->y >= leftUpY && searchedPlayer->y <= rightDownY)
 				{
-					targetPlayer = pair.second;
+					targetPlayer = searchedPlayer;
 					targetPlayer->hp -= dfATTACK1_DAMAGE;
 					// 데미지 패킷 및 헤더 생성, 전송
 					CPacket* damagePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
@@ -258,16 +264,16 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 		for (int sectorY = startSectorY; sectorY <= endSectorY; ++sectorY)
 		{
 			// 각 섹터의 객체들을 순회하며 대상 찾기
-			const auto& playerUMap = SectorManager::GetInstance()->GetSectorPlayerMap(sectorY, sectorX);
-			for (auto& pair : playerUMap)
+			const auto& playerUSet = SectorManager::GetInstance()->GetSectorPlayerSet(sectorY, sectorX);
+			for (Player* searchedPlayer : playerUSet)
 			{
-				if (pair.second == player)
+				if (searchedPlayer == player)
 					continue;
 				// 대상이 공격 범위 안에 있는지 확인
-				if (pair.second->x >= leftUpX && pair.second->x <= rightDownX &&
-					pair.second->y >= leftUpY && pair.second->y <= rightDownY)
+				if (searchedPlayer->x >= leftUpX && searchedPlayer->x <= rightDownX &&
+					searchedPlayer->y >= leftUpY && searchedPlayer->y <= rightDownY)
 				{
-					targetPlayer = pair.second;
+					targetPlayer = searchedPlayer;
 					targetPlayer->hp -= dfATTACK2_DAMAGE;
 					// 데미지 패킷 및 헤더 생성, 전송
 					CPacket* damagePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
@@ -361,16 +367,16 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 		for (int sectorY = startSectorY; sectorY <= endSectorY; ++sectorY)
 		{
 			// 각 섹터의 객체들을 순회하며 대상 찾기
-			const auto& playerUMap = SectorManager::GetInstance()->GetSectorPlayerMap(sectorY, sectorX);
-			for (auto& pair : playerUMap)
+			const auto& playerUSet = SectorManager::GetInstance()->GetSectorPlayerSet(sectorY, sectorX);
+			for (Player* searchedPlayer : playerUSet)
 			{
-				if (pair.second == player)
+				if (searchedPlayer == player)
 					continue;
 				// 대상이 공격 범위 안에 있는지 확인
-				if (pair.second->x >= leftUpX && pair.second->x <= rightDownX &&
-					pair.second->y >= leftUpY && pair.second->y <= rightDownY)
+				if (searchedPlayer->x >= leftUpX && searchedPlayer->x <= rightDownX &&
+					searchedPlayer->y >= leftUpY && searchedPlayer->y <= rightDownY)
 				{
-					targetPlayer = pair.second;
+					targetPlayer = searchedPlayer;
 					targetPlayer->hp -= dfATTACK3_DAMAGE;
 					// 데미지 패킷 및 헤더 생성, 전송
 					CPacket* damagePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();

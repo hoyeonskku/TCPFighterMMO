@@ -8,32 +8,25 @@ void TimeManager::Init()
 {
 	timeBeginPeriod(1);
 	nextTick = timeGetTime();
+	frameTick = nextTick;
 }
 
 bool TimeManager::CheckLogicFrameTime()
 {
-	unsigned int currentTick = timeGetTime();
+	currentTick = timeGetTime();
 	if (currentTick > nextTick)
 	{
+		//fps++;
+		//if (currentTick - frameTick >= 1000)
+		//{
+		//	//std::cout << fps << std::endl;
+		//	frameTick = currentTick;
+		//	fps = 0;
+		//}
 		nextTick += logicFrameTime;
 		return true;
 	}
 	return false;
-}
-bool TimeManager::CheckNetworkFrameTime()
-{
-	unsigned int currentTick = timeGetTime();
-	if (currentTick > nextTick)
-	{
-		nextTick += networkFrameTime;
-		return true;
-	}
-	return false;
-}
-
-void TimeManager::SetCurrentTick()
-{
-	currentTick = timeGetTime();
 }
 
 unsigned int TimeManager::GetCurrentTick()

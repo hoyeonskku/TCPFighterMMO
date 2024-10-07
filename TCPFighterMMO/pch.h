@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <ws2tcpip.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 #pragma comment(lib, "ws2_32.lib")
 

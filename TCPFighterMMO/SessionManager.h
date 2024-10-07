@@ -28,7 +28,6 @@ public:
 		sessionDeleteCallback = deleteCallback;
 	}
 
-
 	Session* CreateSession()
 	{
 		Session* newSession = sessionPool.Alloc();
@@ -51,7 +50,8 @@ public:
 			sessionDeleteCallback(session);  // 콜백 함수 호출
 		}
 		// 세션 삭제
-		_sessionMap.erase(session->sessionID);
+		_sessionMap.erase(session->sessionID);	
+		closesocket(session->socket);
 		sessionPool.Free(session);
 		return true;
 	}
@@ -66,15 +66,12 @@ public:
 	// 리스트에서 삭제할 세션을 찾아 제거하는 메서드
 	void RemoveSessions() {
 		for (auto sessionId : _toDeletedSessionId)
-		{
 			DeleteSession(_sessionMap[sessionId]);
-			_sessionMap.erase(sessionId);
-		}
+		
 		_toDeletedSessionId.clear();
 	}
 
 public:
 	std::unordered_map<int, Session*>& GetSessionMap() { return _sessionMap; }
-	std::list<int>& GetDeletedSessionList() { return _toDeletedSessionId; }
 	int _id = 0;
 };

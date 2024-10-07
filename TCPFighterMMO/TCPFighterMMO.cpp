@@ -24,7 +24,6 @@ int main()
 		try
 		{
 			NetworkManager::GetInstance()->netIOProcess();
-			TimeManager::GetInstance()->SetCurrentTick();
 			ObjectManager::GetInstance()->Update();
 		}
 		catch (const std::runtime_error& e)

@@ -7,10 +7,11 @@ private:
 	~TimeManager() {};
 
 	unsigned int nextTick;
+	unsigned int frameTick;
 	unsigned int oldTick;
 	unsigned int currentTick;
 	int logicFrameTime = 40;
-	int networkFrameTime = 3;
+	int fps = 0;
 
 public:
 	static TimeManager* GetInstance(void)
@@ -27,7 +28,5 @@ public:
 		logicFrameTime = 1000 / FPS;
 	}
 	bool CheckLogicFrameTime();
-	bool CheckNetworkFrameTime();
-	void SetCurrentTick();
 	unsigned int GetCurrentTick();
 };

@@ -23,7 +23,7 @@ public:
 	void SectorMove(Player* player);
 	void InsertPlayerInSector(Player* player);
 	void DeletePlayerInSector(Player* player);
-	std::unordered_map<int, Player*>& GetSectorPlayerMap(int y, int x);
+	std::unordered_set<Player*>& GetSectorPlayerSet(int y, int x);
 	SectorPos FindSectorPos(int y, int x);
 
 private:

@@ -56,24 +56,24 @@ void CreatePlayer(Session* session)
 	{
 		int dy = player->sectorPos.y + direction[i][0];
 		int dx = player->sectorPos.x + direction[i][1];
-		const auto& playerUMap = SectorManager::GetInstance()->GetSectorPlayerMap(dy, dx);
+		const auto& playerUSet = SectorManager::GetInstance()->GetSectorPlayerSet(dy, dx);
 		
-		for (auto& pair : playerUMap)
+		for (Player* searchedPlayer : playerUSet)
 		{
 			CPacket* CreateOtherCharacterPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
 			CreateOtherCharacterPacket->Clear();
 			st_PACKET_HEADER CreateOtherCharacterHeader;
-			mpCreateOtherCharacter(&CreateOtherCharacterHeader, CreateOtherCharacterPacket, pair.second->session->sessionID, pair.second->dir, pair.second->x, pair.second->y, pair.second->hp);
+			mpCreateOtherCharacter(&CreateOtherCharacterHeader, CreateOtherCharacterPacket, searchedPlayer->session->sessionID, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->hp);
 			NetworkManager::GetInstance()->SendUnicast(session, &CreateOtherCharacterHeader, CreateOtherCharacterPacket);
 			SerializingBufferManager::GetInstance()->_cPacketPool.Free(BroadcastMyCharacterToOthersPacket);
 			// 움직이는 플레이어인 경우 무브 패킷도 보내줌
-			if (pair.second->moveFlag == true)
+			if (searchedPlayer->moveFlag == true)
 			{
 				st_PACKET_HEADER pMoveHeader;
 
 				CPacket* pMovePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
 				pMovePacket->Clear();
-				mpMoveStart(&pMoveHeader, pMovePacket, pair.second->dir, pair.second->x, pair.second->y, pair.second->session->sessionID);
+				mpMoveStart(&pMoveHeader, pMovePacket, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->session->sessionID);
 				NetworkManager::GetInstance()->SendUnicast(session, &pMoveHeader, pMovePacket);
 				SerializingBufferManager::GetInstance()->_cPacketPool.Free(pMovePacket);
 			}

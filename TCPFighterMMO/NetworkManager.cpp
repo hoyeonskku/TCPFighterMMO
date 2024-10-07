@@ -6,7 +6,7 @@
 #define _WINSOCKAPI_
 #include <windows.h>
 #include <ws2tcpip.h>
-#include "PacketDEfine.h"
+#include "PacketDefine.h"
 #include "Session.h"
 #include "netPacketProcs.h"
 #include "MakePacket.h"
@@ -99,10 +99,6 @@ void NetworkManager::netCleanUp()
 
 void NetworkManager::netIOProcess()
 {
-	/*if (!TimeManager::GetInstance()->CheckNetworkFrameTime())
-	{
-		return;
-	}*/
 	FD_SET rSet;
 	FD_SET wSet;
 
@@ -122,27 +118,27 @@ void NetworkManager::netIOProcess()
 
 	int SelectRetval;
 
-	auto it = sessionList.begin();
-	auto iter = sessionList.begin();
-	while (sessionListSize > 0)
+	auto setIter = sessionList.begin();
+	auto isSetIter = sessionList.begin();
+	while (sessionListSize >= 64)
 	{
 		FD_ZERO(&rSet);
 		FD_ZERO(&wSet);
-		for (int i = 0; i < min(64, sessionListSize); i++)
+		for (int i = 0; i < 64; i++)
 		{
-			if ((*iter).second->socket == INVALID_SOCKET)
-			{
-				iter++;
-				continue;
-			}
-			FD_SET((*iter).second->socket, &rSet);
-			FD_SET((*iter).second->socket, &wSet);
-			iter++;
+			FD_SET((*setIter).second->socket, &rSet);
+
+			if ((*setIter).second->sendBuffer->GetUseSize() != 0)
+				FD_SET((*setIter).second->socket, &wSet);
+			setIter++;
 		}
 		sessionListSize -= 64;
 		SelectRetval = select(0, &rSet, &wSet, nullptr, &timeout);
 		if (SelectRetval == -1)
 		{
+			DWORD error = WSAGetLastError();
+			if (error == 10022)
+				break;
 			std::cout << "select() error, code: " << WSAGetLastError() << std::endl;
 			DebugBreak();
 			g_bShutdown = false;
@@ -150,42 +146,80 @@ void NetworkManager::netIOProcess()
 		// 나머지 세션 순회
 		for (int j = 0; j < 64; j++)
 		{
-			if (it == sessionList.end())
-				break;
-			if ((*it).second->socket == listenSocket)
-			{
-				it++;
-				continue;
-			}
-
-			if ((*it).second->socket == INVALID_SOCKET)
-			{
-				it++;
-				continue;
-			}
-			if (FD_ISSET((*it).second->socket, &rSet))
+			if (FD_ISSET((*isSetIter).second->socket, &rSet))
 			{
 				SelectRetval--;
-				netProc_Recv((*it).second);
+				netProc_Recv((*isSetIter).second);
 			}
-			if (FD_ISSET((*it).second->socket, &wSet) && (*it).second->sendBuffer->GetUseSize() != 0)
+			if (FD_ISSET((*isSetIter).second->socket, &wSet))
 			{
 				SelectRetval--;
-				if ((*it).second->socket != INVALID_SOCKET)
-					netProc_Send((*it).second);
+				if ((*isSetIter).second->deathFlag != true)
+				{
+					netProc_Send((*isSetIter).second);
+				}
 			}
+			isSetIter++;
 			if (SelectRetval == 0)
 				break;
-			it++;
 		}
 	}
 
-	//FD_ZERO(&rSet);
-	//FD_SET(listenSocket, &rSet);
-	//SelectRetval = select(0, &rSet, nullptr, nullptr, &timeout);
+	FD_ZERO(&rSet);
+	FD_ZERO(&wSet);
+	
+	for (int i = 0; i < sessionListSize; i++)
+	{
+		FD_SET((*setIter).second->socket, &rSet);
+
+		if ((*setIter).second->sendBuffer->GetUseSize() != 0)
+			FD_SET((*setIter).second->socket, &wSet);
+		setIter++;
+	}
+	FD_SET(listenSocket, &rSet);
+
+	SelectRetval = select(0, &rSet, &wSet, nullptr, &timeout);
+	if (SelectRetval == -1)
+	{
+		DWORD error = WSAGetLastError();
+		std::cout << "select() error, code: " << WSAGetLastError() << std::endl;
+		DebugBreak();
+		g_bShutdown = false;
+	}
+	// 나머지 세션 순회
+	for (int j = 0; j < sessionListSize; j++)
+	{
+		if (isSetIter == sessionList.end())
+			break;
+
+		if ((*isSetIter).second->socket == listenSocket)
+		{	
+			SelectRetval--;
+			isSetIter++;
+			continue;
+		}
+
+		if (FD_ISSET((*isSetIter).second->socket, &rSet))
+		{
+			SelectRetval--;
+			netProc_Recv((*isSetIter).second);
+		}
+
+		if (FD_ISSET((*isSetIter).second->socket, &wSet))
+		{
+			if ((*isSetIter).second->deathFlag != true)
+			{
+				SelectRetval--;
+				netProc_Send((*isSetIter).second);
+			}
+		}
+		isSetIter++;
+		if (SelectRetval == 0)
+			break;
+	}
 
 	// 리슨소켓이 리드셋에 있는 경우 accept 요청이 있음.
-	//if (FD_ISSET(listenSocket, &rSet))
+	if (FD_ISSET(listenSocket, &rSet))
 		netProc_Accept();
 
 	SessionManager::GetInstance()->RemoveSessions();
@@ -196,41 +230,64 @@ void NetworkManager::netProc_Accept()
 	char addr_str[INET_ADDRSTRLEN];
 	SOCKADDR_IN clientaddr;
 	int addrlen = sizeof(clientaddr);
-	while (true)
-	{
-		SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
-		if (clientSock == INVALID_SOCKET)
-		{
-			if (WSAGetLastError() == WSAEWOULDBLOCK) 
-				// 더 이상 처리할 클라이언트가 없으므로 루프 종료
-				break;
-			std::cout << "accept() error" << std::endl;
-			std::cout << WSAGetLastError() << std::endl;
-			DebugBreak();
-			g_bShutdown = false;
-			return;
-		}
-		// 세션 생성
-		Session* session = SessionManager::GetInstance()->CreateSession();
-		session->socket = clientSock;
+	//while (true)
+	//{
+	//	SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
+	//	if (clientSock == INVALID_SOCKET)
+	//	{
+	//		if (WSAGetLastError() == WSAEWOULDBLOCK) 
+	//			// 더 이상 처리할 클라이언트가 없으므로 루프 종료
+	//			break;
+	//		std::cout << "accept() error" << std::endl;
+	//		std::cout << WSAGetLastError() << std::endl;
+	//		DebugBreak();
+	//		g_bShutdown = false;
+	//		return;
+	//	}
+	//	// 세션 생성
+	//	Session* session = SessionManager::GetInstance()->CreateSession();
+	//	session->socket = clientSock;
 
-		inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
-		session->port = ntohs(clientaddr.sin_port);
-		strcpy_s(session->ip, sizeof(session->ip), addr_str);
+	//	inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
+	//	session->port = ntohs(clientaddr.sin_port);
+	//	strcpy_s(session->ip, sizeof(session->ip), addr_str);
+	//}
+	SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
+	if (clientSock == INVALID_SOCKET)
+	{
+		std::cout << "accept() error" << std::endl;
+		std::cout << WSAGetLastError() << std::endl;
+		DebugBreak();
+		g_bShutdown = false;
+		return;
 	}
+	// 세션 생성
+	Session* session = SessionManager::GetInstance()->CreateSession();
+	session->socket = clientSock;
+
+	inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
+	session->port = ntohs(clientaddr.sin_port);
+	strcpy_s(session->ip, sizeof(session->ip), addr_str);
+	
 }
 
 void NetworkManager::SendUnicast(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket)
 {
 	session->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
-	session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
+	int size = session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
+
+#ifdef _DEBUG
+	if (size != pHeader->bySize)
+		DebugBreak();
+#endif // _DEBUG
+
 }
 
 void NetworkManager::SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHeader, CPacket* pPacket)
 {
 	for (auto& pair : SessionManager::GetInstance()->GetSessionMap())
 	{
-		if (pair.second->socket == INVALID_SOCKET || pair.second == elseSession)
+		if (pair.second->deathFlag == true || pair.second == elseSession)
 			continue;
 
 		pair.second->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
@@ -240,12 +297,11 @@ void NetworkManager::SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHead
 
 void NetworkManager::Disconnect(Session* session)
 {
-	if (session->socket == INVALID_SOCKET)
+	if (session->deathFlag == true)
 		return;
 
 	SessionManager::GetInstance()->ReserveDeleteSession(session);
-	closesocket(session->socket);
-	session->socket = INVALID_SOCKET;
+	session->deathFlag = true;
 }
 
 void NetworkManager::netProc_Recv(Session* session)
@@ -332,7 +388,7 @@ void NetworkManager::netProc_Send(Session* session)
 	// 보내야 할 데이터 크기 확인
 	int dataSize = session->sendBuffer->GetUseSize();
 
-	if (session->socket == INVALID_SOCKET)
+	if (session->deathFlag == true)
 		return;
 
 	// 경계를 안넘는 경우

@@ -1,7 +1,6 @@
 #pragma once
 #include "CRingBuffer.h"
 
-#define RINGBUFFERSIZE 20000
 class Player;
 
 struct SectorPos
@@ -24,6 +23,6 @@ public:
 
 	int x;
 	int y;
-	std::unordered_map<int, Player*> _playerMap;
+	std::unordered_set<Player*> _playerSet;
 };
 
