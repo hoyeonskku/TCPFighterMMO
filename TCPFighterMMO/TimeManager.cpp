@@ -16,13 +16,13 @@ bool TimeManager::CheckLogicFrameTime()
 	currentTick = timeGetTime();
 	if (currentTick > nextTick)
 	{
-		//fps++;
-		//if (currentTick - frameTick >= 1000)
-		//{
-		//	//std::cout << fps << std::endl;
-		//	frameTick = currentTick;
-		//	fps = 0;
-		//}
+		/*fps++;
+		if (currentTick - frameTick >= 1000)
+		{
+			std::cout << fps << std::endl;
+			frameTick = currentTick;
+			fps = 0;
+		}*/
 		nextTick += logicFrameTime;
 		return true;
 	}

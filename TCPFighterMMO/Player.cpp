@@ -9,6 +9,7 @@
 #include "SerializingBuffer.h"
 #include "SerializingBufferManager.h"
 #include "TimeManager.h"
+#include <string>
 
 // 플레이어 생성 콜백함수
 // 세선 생성시 이 콜백함수가 실행됨
@@ -19,10 +20,10 @@ void CreatePlayer(Session* session)
 	player->hp = 100;
 	player->sessionID = session->sessionID;
 	player->dir = dfPACKET_MOVE_DIR_LL;
-	//player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP - 1;
-	//player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT - 1;
-	player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
-	player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP - 1;
+	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT - 1;
+	//player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
+	//player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
 	SectorPos pos = SectorManager::GetInstance()->FindSectorPos(player->y, player->x);
 	player->sectorPos.y = pos.y;
 	player->sectorPos.x = pos.x;
@@ -108,10 +109,11 @@ void Player::Update()
 		NetworkManager::GetInstance()->Disconnect(session);
 		return;
 	}
-	int direction[8][2] = { {0, -6}, {-4, -6}, {-4, 0}, {-4, 6}, {0, 6}, {4, 6}, {4, 0}, {4, -6} };
-	int tempX, tempY;
 	if (moveFlag == true)
 	{
+		int direction[8][2] = { {0, -6}, {-4, -6}, {-4, 0}, {-4, 6}, {0, 6}, {4, 6}, {4, 0}, {4, -6} };
+		//int direction[8][2] = { {0, -3}, {-2, -3}, {-2, 0}, {-2, 3}, {0, 3}, {2, 3}, {2, 0}, {2, -3} };
+		int tempX, tempY;
 		tempY = y + direction[dir][0];
 		tempX = x + direction[dir][1];
 
@@ -139,6 +141,8 @@ void Player::Update()
 		// 조건에 부합하는 경우에만 값 갱신
 		y = tempY;
 		x = tempX;
+
+		//std::cout << "x :" << x << "y :" << y << std::endl;
 		SectorManager::GetInstance()->SectorMove(this);
 	}
 }

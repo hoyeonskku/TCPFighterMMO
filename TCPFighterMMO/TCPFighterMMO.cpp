@@ -21,16 +21,8 @@ int main()
 
 	while (!g_bShutdown)
 	{
-		try
-		{
-			NetworkManager::GetInstance()->netIOProcess();
-			ObjectManager::GetInstance()->Update();
-		}
-		catch (const std::runtime_error& e)
-		{
-			std::cerr << "Caught an exception: " << e.what() << std::endl;
-			DebugBreak();
-		}
+		NetworkManager::GetInstance()->netIOProcess();
+		ObjectManager::GetInstance()->Update();
 	}
 	NetworkManager::GetInstance()->netCleanUp();
 	return 0;

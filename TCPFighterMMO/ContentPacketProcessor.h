@@ -15,41 +15,45 @@ public:
 	virtual ~ContentPacketProcessor() {}
 	bool ProcessPacket(Session* session, unsigned char packetType, CPacket* packetData) 
 	{
-		PacketInfo packetInfo;
-		packetInfo.packetId = packetType;
-		packetInfo.recivedTime = TimeManager::GetInstance()->GetCurrentTick();
-		session->packetQueue.Enqueue(packetInfo);
-		switch (packetType)
+		try
 		{
-		case dfPACKET_CS_MOVE_START:
-		{
-			return netPacketProc_MoveStart(session, packetData);
+			switch (packetType)
+			{
+				case dfPACKET_CS_MOVE_START:
+				{
+					return netPacketProc_MoveStart(session, packetData);
+				}
+				case dfPACKET_CS_MOVE_STOP:
+				{
+					return netPacketProc_MoveStop(session, packetData);
+				}
+				case dfPACKET_CS_ATTACK1:
+				{
+					return netPacketProc_Attack1(session, packetData);
+				}
+				case dfPACKET_CS_ATTACK2:
+				{
+					return netPacketProc_Attack2(session, packetData);
+				}
+				case dfPACKET_CS_ATTACK3:
+				{
+					return netPacketProc_Attack3(session, packetData);
+				}
+				case dfPACKET_CS_ECHO:
+				{
+					return netPacketProc_Echo(session, packetData);
+				}
+				default:
+				{
+					NetworkManager::GetInstance()->Disconnect(session);
+					return false;
+				}
+			}
 		}
-		case dfPACKET_CS_MOVE_STOP:
+		catch (const std::runtime_error& e)
 		{
-			return netPacketProc_MoveStop(session, packetData);
-		}
-		case dfPACKET_CS_ATTACK1:
-		{
-			return netPacketProc_Attack1(session, packetData);
-		}
-		case dfPACKET_CS_ATTACK2:
-		{
-			return netPacketProc_Attack2(session, packetData);
-		}
-		case dfPACKET_CS_ATTACK3:
-		{
-			return netPacketProc_Attack3(session, packetData);
-		}
-		case dfPACKET_CS_ECHO:
-		{
-			return netPacketProc_Echo(session, packetData);
-		}
-		default:
-		{
-			NetworkManager::GetInstance()->Disconnect(session);
-			return false;
-		}
+			std::cerr << "Caught an exception: " << e.what() << std::endl;
+			DebugBreak();
 		}
 	}
 

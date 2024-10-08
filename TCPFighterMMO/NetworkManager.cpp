@@ -14,6 +14,7 @@
 #include "TimeManager.h"
 #include "ObjectManager.h"
 #include "SerializingBuffer.h"
+#include "SerializingBufferManager.h"
 
 extern bool g_bShutdown;
 
@@ -189,16 +190,6 @@ void NetworkManager::netIOProcess()
 	// 나머지 세션 순회
 	for (int j = 0; j < sessionListSize; j++)
 	{
-		if (isSetIter == sessionList.end())
-			break;
-
-		if ((*isSetIter).second->socket == listenSocket)
-		{	
-			SelectRetval--;
-			isSetIter++;
-			continue;
-		}
-
 		if (FD_ISSET((*isSetIter).second->socket, &rSet))
 		{
 			SelectRetval--;
@@ -311,6 +302,7 @@ void NetworkManager::netProc_Recv(Session* session)
 
 	// 통째로 리시브	
 	RecvRetval = recv(session->socket, session->recvBuffer->GetRearBufferPtr(), session->recvBuffer->DirectEnqueueSize(), 0);
+	session->recvBuffer->MoveRear(RecvRetval);
 	// Select에 반응이 보인 소켓에서 리시브가 0 -> 
 	if (RecvRetval == 0)
 	{
@@ -334,7 +326,6 @@ void NetworkManager::netProc_Recv(Session* session)
 		// 나머지 에러 체크를 위해 서버 셧다운
 		DebugBreak();
 	}
-	session->recvBuffer->MoveRear(RecvRetval);
 	while (true)
 	{
 		// 헤더만큼 읽을 수 있으면
@@ -346,9 +337,12 @@ void NetworkManager::netProc_Recv(Session* session)
 
 			if (session->recvBuffer->GetUseSize() < header.bySize + sizeof(st_PACKET_HEADER))
 				break;
-
-			char* packetData = new char[header.bySize];
 			session->recvBuffer->MoveFront(sizeof(st_PACKET_HEADER));
+
+			CPacket* packet = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+			packet->Clear();
+
+			char* packetData = packet->GetBufferPtr();
 
 			// 사이즈보다 경계까지의 값이 작다면
 			if (session->recvBuffer->DirectDequeueSize() < header.bySize)
@@ -367,14 +361,16 @@ void NetworkManager::netProc_Recv(Session* session)
 				memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), header.bySize);
 				session->recvBuffer->MoveFront(header.bySize);
 			}
+
+			packet->PutData(packetData, header.bySize);
+
 			// 패킷 처리
-			CPacket packet;
-			packet.PutData(packetData, header.bySize);
-			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, &packet))
+			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, packet))
 			{
 				Disconnect(session);
 			}
-			delete[] packetData;
+
+			SerializingBufferManager::GetInstance()->_cPacketPool.Free(packet);
 		}
 		else
 			break;

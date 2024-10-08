@@ -8,6 +8,12 @@ struct PacketInfo
 public:
 	DWORD recivedTime;
 	int packetId;
+	int x;
+	int y;
+	int dir;
+	int serverX;
+	int serverY;
+	int serverDir;
 };
 
 class PacketQueue {
