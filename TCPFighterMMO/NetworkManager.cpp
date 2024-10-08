@@ -161,11 +161,14 @@ void NetworkManager::netIOProcess()
 				}
 			}
 			isSetIter++;
+			if (SelectRetval == 0)
+			{
+				isSetIter = setIter;
+				break;
 			/*if (SelectRetval == 0)
 				break;*/
+			}
 		}
-		if (SelectRetval != 0)
-			DebugBreak(); 
 	}
 
 	FD_ZERO(&rSet);
@@ -190,27 +193,28 @@ void NetworkManager::netIOProcess()
 		g_bShutdown = false;
 	}
 	// 나머지 세션 순회
+	int readCount = 0;
+	int writeCount = 0;
 	for (int j = 0; j < sessionListSize; j++)
 	{
 		if (FD_ISSET((*isSetIter).second->socket, &rSet))
 		{
 			SelectRetval--;
+			readCount++;
 			netProc_Recv((*isSetIter).second);
 		}
 
 		if (FD_ISSET((*isSetIter).second->socket, &wSet))
 		{
+			SelectRetval--;
+			writeCount++;
 			if ((*isSetIter).second->deathFlag != true)
 			{
-				SelectRetval--;
 				netProc_Send((*isSetIter).second);
 			}
 		}
 		isSetIter++;
-		/*if (SelectRetval == 0)
-			break;*/
 	}
-
 	// 리슨소켓이 리드셋에 있는 경우 accept 요청이 있음.
 	if (FD_ISSET(listenSocket, &rSet))
 	{
@@ -218,9 +222,11 @@ void NetworkManager::netIOProcess()
 		netProc_Accept();
 	}
 
-
 	if (SelectRetval != 0)
+	{
+		isSetIter++;
 		DebugBreak();
+	}
 
 	SessionManager::GetInstance()->RemoveSessions();
 }

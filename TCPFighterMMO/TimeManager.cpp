@@ -19,18 +19,13 @@ bool TimeManager::CheckLogicFrameTime()
 	//std::cout << currentTick - prevTick << std::endl;
 	if (currentTick > nextTick)
 	{
-		currentFrameCount++;
-		fps++;
-		if (currentTick - frameTick >= 1000)
-		{
-			std::cout << fps << std::endl;
-			int networkFps = NetworkManager::GetInstance()->networkFps;
-			std::cout << networkFps << std::endl;
-			NetworkManager::GetInstance()->networkFps = 0;
-			
-			frameTick = currentTick;
-			fps = 0;
-		}
+		//fps++;
+		//if (currentTick - frameTick >= 1000)
+		//{
+		//	//std::cout << fps << std::endl;
+		//	frameTick = currentTick;
+		//	fps = 0;
+		//}
 		nextTick += logicFrameTime;
 		return true;
 	}
