@@ -14,7 +14,7 @@ void TimeManager::Init()
 
 bool TimeManager::CheckLogicFrameTime()
 {
-	prevTick = currentTick;
+	//prevTick = currentTick;
 	currentTick = timeGetTime();
 	//std::cout << currentTick - prevTick << std::endl;
 	if (currentTick > nextTick)

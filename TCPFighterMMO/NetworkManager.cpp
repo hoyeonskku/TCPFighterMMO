@@ -32,23 +32,26 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 	int IoctlsocketRetval;
 	int BindRetval;
 	int ListenRetval;
+	int WSAStartUpError;
+	int SocketError;
+	int IoctlsocketError;
+	int BindError;
+	int ListenError;
 	WSADATA wsaData;
 
 	WSAStartUpRetval = ::WSAStartup(MAKEWORD(2, 2), OUT & wsaData);
 	if (WSAStartUpRetval != 0)
 	{
-		printf("WSAStartup Error!");
-		std::cout << WSAGetLastError();
+		WSAStartUpError = WSAGetLastError();
+		_LOG(dfLOG_LEVEL_ERROR, L"WSAStartup() error, code %d", WSAStartUpError);
 		g_bShutdown = false;
 		return 0;
 	}
-	else
-		printf("WSAStartup #\n");
 
 	listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket == INVALID_SOCKET)
 	{
-		printf("socket Error!\n");
+		_LOG(dfLOG_LEVEL_ERROR, L"socket Error");
 		g_bShutdown = false;
 		return 0;
 	}
@@ -61,20 +64,19 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 	BindRetval = ::bind(listenSocket, (SOCKADDR*)(&myAddress), sizeof(myAddress));
 	if (BindRetval == SOCKET_ERROR)
 	{
-		printf("bind Error!\n");
-		std::cout << WSAGetLastError();
+		BindError = WSAGetLastError();
+		_LOG(dfLOG_LEVEL_ERROR, L"bind() error, code %d", BindError);
 		g_bShutdown = false;
 		return 0;
 	}
-	else
-		printf("bind OK # Port:20000\n");
 
 	u_long on = 1;
 	IoctlsocketRetval = ::ioctlsocket(listenSocket, FIONBIO, &on) == INVALID_SOCKET;
 
 	if (IoctlsocketRetval == SOCKET_ERROR)
 	{
-		printf("ioctlsocket Error!\n");
+		IoctlsocketError = WSAGetLastError();
+		_LOG(dfLOG_LEVEL_ERROR, L"ioctlsocket() error, code %d", IoctlsocketError);
 		g_bShutdown = false;
 		return 0;
 	}
@@ -83,14 +85,11 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 	//ListenRetval = ::listen(listenSocket, SOMAXCONN);
 	if (ListenRetval == SOCKET_ERROR)
 	{
-		printf("listen Error!\n");
+		ListenError = WSAGetLastError();
+		_LOG(dfLOG_LEVEL_ERROR, L"listen() error, code %d", ListenError);
 		g_bShutdown = false;
 		return 0;
 	}
-	else
-		printf("listen OK #\n");
-
-	return 0;
 }
 
 void NetworkManager::netCleanUp()
@@ -120,6 +119,7 @@ void NetworkManager::netIOProcess()
 	char addr_str[INET_ADDRSTRLEN];
 
 	int SelectRetval;
+	int SelectError;
 
 	auto setIter = sessionList.begin();
 	auto isSetIter = sessionList.begin();
@@ -139,8 +139,8 @@ void NetworkManager::netIOProcess()
 		SelectRetval = select(0, &rSet, &wSet, nullptr, &timeout);
 		if (SelectRetval == -1)
 		{
-			DWORD error = WSAGetLastError();
-			std::cout << "select() error, code: " << WSAGetLastError() << std::endl;
+			SelectError = WSAGetLastError();
+			_LOG(dfLOG_LEVEL_ERROR, L"select() error, code %d", SelectError);
 			DebugBreak();
 			g_bShutdown = false;
 		}
@@ -165,8 +165,6 @@ void NetworkManager::netIOProcess()
 			{
 				isSetIter = setIter;
 				break;
-			/*if (SelectRetval == 0)
-				break;*/
 			}
 		}
 	}
@@ -187,8 +185,8 @@ void NetworkManager::netIOProcess()
 	SelectRetval = select(0, &rSet, &wSet, nullptr, &timeout);
 	if (SelectRetval == -1)
 	{
-		DWORD error = WSAGetLastError();
-		std::cout << "select() error, code: " << WSAGetLastError() << std::endl;
+		SelectError = WSAGetLastError();
+		_LOG(dfLOG_LEVEL_ERROR, L"select() error, code %d", SelectError);
 		DebugBreak();
 		g_bShutdown = false;
 	}
@@ -222,12 +220,6 @@ void NetworkManager::netIOProcess()
 		netProc_Accept();
 	}
 
-	if (SelectRetval != 0)
-	{
-		isSetIter++;
-		DebugBreak();
-	}
-
 	SessionManager::GetInstance()->RemoveSessions();
 }
 
@@ -236,44 +228,45 @@ void NetworkManager::netProc_Accept()
 	char addr_str[INET_ADDRSTRLEN];
 	SOCKADDR_IN clientaddr;
 	int addrlen = sizeof(clientaddr);
-	//while (true)
-	//{
-	//	SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
-	//	if (clientSock == INVALID_SOCKET)
-	//	{
-	//		if (WSAGetLastError() == WSAEWOULDBLOCK) 
-	//			// 더 이상 처리할 클라이언트가 없으므로 루프 종료
-	//			break;
-	//		std::cout << "accept() error" << std::endl;
-	//		std::cout << WSAGetLastError() << std::endl;
-	//		DebugBreak();
-	//		g_bShutdown = false;
-	//		return;
-	//	}
-	//	// 세션 생성
-	//	Session* session = SessionManager::GetInstance()->CreateSession();
-	//	session->socket = clientSock;
-
-	//	inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
-	//	session->port = ntohs(clientaddr.sin_port);
-	//	strcpy_s(session->ip, sizeof(session->ip), addr_str);
-	//}
-	SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
-	if (clientSock == INVALID_SOCKET)
+	int acceptError;
+	while (true)
 	{
-		std::cout << "accept() error" << std::endl;
-		std::cout << WSAGetLastError() << std::endl;
-		DebugBreak();
-		g_bShutdown = false;
-		return;
-	}
-	// 세션 생성
-	Session* session = SessionManager::GetInstance()->CreateSession();
-	session->socket = clientSock;
+		SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
+		if (clientSock == INVALID_SOCKET)
+		{
+			if (WSAGetLastError() == WSAEWOULDBLOCK) 
+				// 더 이상 처리할 클라이언트가 없으므로 루프 종료
+				break;
+			std::cout << "accept() error" << std::endl;
+			std::cout << WSAGetLastError() << std::endl;
+			DebugBreak();
+			g_bShutdown = false;
+			return;
+		}
+		// 세션 생성
+		Session* session = SessionManager::GetInstance()->CreateSession();
+		session->socket = clientSock;
 
-	inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
-	session->port = ntohs(clientaddr.sin_port);
-	strcpy_s(session->ip, sizeof(session->ip), addr_str);
+		inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
+		session->port = ntohs(clientaddr.sin_port);
+		strcpy_s(session->ip, sizeof(session->ip), addr_str);
+	}
+	//SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
+	//if (clientSock == INVALID_SOCKET)
+	//{
+	//	acceptError = WSAGetLastError();
+	//	_LOG(dfLOG_LEVEL_ERROR, L"accept() error, code %d", acceptError);
+	//	DebugBreak();
+	//	g_bShutdown = false;
+	//	return;
+	//}
+	//// 세션 생성
+	//Session* session = SessionManager::GetInstance()->CreateSession();
+	//session->socket = clientSock;
+
+	//inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
+	//session->port = ntohs(clientaddr.sin_port);
+	//strcpy_s(session->ip, sizeof(session->ip), addr_str);
 	
 }
 
@@ -284,7 +277,10 @@ void NetworkManager::SendUnicast(Session* session, st_PACKET_HEADER* pHeader, CP
 
 #ifdef _DEBUG
 	if (size != pHeader->bySize)
+	{
 		DebugBreak();
+		_LOG(dfLOG_LEVEL_ERROR, L"LingBuffer OverFlow");
+}
 #endif // _DEBUG
 
 }
@@ -312,7 +308,6 @@ void NetworkManager::Disconnect(Session* session)
 
 void NetworkManager::netProc_Recv(Session* session)
 {
-
 	int RecvRetval;
 	int RecvError;
 
@@ -321,6 +316,7 @@ void NetworkManager::netProc_Recv(Session* session)
 	// Select에 반응이 보인 소켓에서 리시브가 0 -> 
 	if (RecvRetval == 0)
 	{
+		_LOG(dfLOG_LEVEL_ERROR, L"Recv() 0 Disconnect.");
 		Disconnect(session);
 		return;
 	}
@@ -330,16 +326,20 @@ void NetworkManager::netProc_Recv(Session* session)
 		// 아래 두 경우는 강제로 / 소프트웨어로 인해 소켓이 닫힌 경우
 		if (RecvError == WSAECONNABORTED)
 		{
+			_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNABORTED Disconnect %d.", RecvError);
 			Disconnect(session);
 			return;
 		}
 		if (RecvError == WSAECONNRESET)
 		{
+			_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNRESET Disconnect %d.", RecvError);
 			Disconnect(session);
 			return;
 		}
 		// 나머지 에러 체크를 위해 서버 셧다운
+		_LOG(dfLOG_LEVEL_SYSTEM, L"Recv Error ShutDown %d.", RecvError);
 		DebugBreak();
+		g_bShutdown = false;
 	}
 
 	session->recvBuffer->MoveRear(RecvRetval);
@@ -384,6 +384,7 @@ void NetworkManager::netProc_Recv(Session* session)
 			// 패킷 처리
 			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, packet))
 			{
+				_LOG(dfLOG_LEVEL_ERROR, L"ProcessPacket Error, sessionId : %d", session->sessionID);
 				Disconnect(session);
 			}
 
@@ -417,16 +418,20 @@ void NetworkManager::netProc_Send(Session* session)
 			// 아래 두 경우는 강제로 / 소프트웨어로 인해 소켓이 닫힌 경우
 			if (SendError == WSAECONNABORTED)
 			{
+				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}
 			if (SendError == WSAECONNRESET)
 			{
+				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}
 			// 이외의 경우 서버 셧다운
+			_LOG(dfLOG_LEVEL_SYSTEM, L"Send Error ShutDown %d.", SendError);
 			DebugBreak();
+			g_bShutdown = false;
 		}
 		session->sendBuffer->MoveFront(sentBytes);
 	}
@@ -443,16 +448,20 @@ void NetworkManager::netProc_Send(Session* session)
 			// 아래 두 경우는 강제로 / 소프트웨어로 인해 소켓이 닫힌 경우
 			if (SendError == WSAECONNABORTED)
 			{
+				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}
 			if (SendError == WSAECONNRESET)
 			{
+				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}
 			// 이외의 경우 서버 셧다운
+			_LOG(dfLOG_LEVEL_SYSTEM, L"Send Error ShutDown %d.", SendError);
 			DebugBreak();
+			g_bShutdown = false;
 		}
 		session->sendBuffer->MoveFront(sentBytes);
 	}
@@ -464,5 +473,6 @@ bool NetworkManager::ProcessPacket(Session* session, char packetType, CPacket* p
 		return packetProcessor->ProcessPacket(session, packetType, packetData);
 	}
 	// 패킷 프로세서가 설정되지 않은 경우
+	_LOG(dfLOG_LEVEL_SYSTEM, L"ProcessPacket is not Set.");
 	return false;
 }

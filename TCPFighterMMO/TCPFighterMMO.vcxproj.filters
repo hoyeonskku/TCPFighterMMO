@@ -80,6 +80,9 @@
     <ClCompile Include="SerializingBufferManager.cpp">
       <Filter>소스 파일\05. Manager</Filter>
     </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>소스 파일\99. Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

@@ -46,6 +46,7 @@ public:
 				default:
 				{
 					NetworkManager::GetInstance()->Disconnect(session);
+					_LOG(dfLOG_LEVEL_ERROR, L"Packet Type Error, sessionID : %d", session->sessionID);
 					return false;
 				}
 			}

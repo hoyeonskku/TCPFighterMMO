@@ -12,5 +12,6 @@
 #pragma comment(lib, "ws2_32.lib")
 
 #include "Define.h"
+#include "Log.h"
 
 

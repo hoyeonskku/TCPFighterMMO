@@ -9,7 +9,6 @@
 #include "Player.h"
 
 bool g_bShutdown = false;
-
 int main()
 {
 	// 초기화 부분

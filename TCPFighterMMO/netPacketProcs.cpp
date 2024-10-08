@@ -37,7 +37,7 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	*pPacket >> Direction >> x >> y;
 
-	PacketInfo packetInfo;
+	/*PacketInfo packetInfo;
 	packetInfo.packetId = dfPACKET_CS_MOVE_START;
 	packetInfo.x = x;
 	packetInfo.y = y;
@@ -47,7 +47,7 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	packetInfo.serverDir = player->dir;
 	packetInfo.currentFrameCount = TimeManager::GetInstance()->currentFrameCount;
 	packetInfo.recivedTime = TimeManager::GetInstance()->GetCurrentTick();
-	session->packetQueue.Enqueue(packetInfo);
+	session->packetQueue.Enqueue(packetInfo);*/
 	// 클라이언트 좌표에 대한 최소한의 에러체크
 	if ((abs(x - player->x) > dfERROR_RANGE) ||
 		(abs(y - player->y) > dfERROR_RANGE))
@@ -85,7 +85,7 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 
 	*pPacket >> Direction >> x >> y;
 
-	PacketInfo packetInfo;
+	/*PacketInfo packetInfo;
 	packetInfo.packetId = dfPACKET_CS_MOVE_STOP;
 	packetInfo.x = x;
 	packetInfo.y = y;
@@ -96,7 +96,8 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 	packetInfo.serverDir = player->dir;
 	packetInfo.recivedTime = TimeManager::GetInstance()->GetCurrentTick();
 
-	session->packetQueue.Enqueue(packetInfo);
+	session->packetQueue.Enqueue(packetInfo);*/
+
 	// cout << "# PACKET_RECV # SessionID:" << player->session->id << endl;
 	// cout << "dfPACKET_CS_MOVE_STOP # SessionID :" << player->session->id << " X : " << player->x << " Y : " << player->y << endl;
 	// 클라이언트 좌표에 대한 최소한의 에러체크
@@ -212,7 +213,8 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 						mpDelete(&deleteHeader, deletePacket, targetPlayer->session->sessionID);
 						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
-						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
+						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);  
+						_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
 				}
@@ -315,6 +317,7 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
+						_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
 				}
@@ -418,6 +421,7 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
+						_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
 				}

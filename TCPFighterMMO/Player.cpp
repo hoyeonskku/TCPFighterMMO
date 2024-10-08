@@ -107,6 +107,7 @@ void Player::Update()
 	if (currentTick - lastProcTime >= dfNETWORK_PACKET_RECV_TIMEOUT)
 	{
 		NetworkManager::GetInstance()->Disconnect(session);
+		_LOG(dfLOG_LEVEL_DEBUG, L"Timeout Disconnect, sessionID: %d, time : %d ms", session->sessionID, currentTick - lastProcTime);
 		return;
 	}
 	if (moveFlag == true)

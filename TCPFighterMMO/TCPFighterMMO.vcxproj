@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ContentPacketProcessor.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="MakePacket.cpp" />
     <ClCompile Include="netPacketProcs.cpp" />
     <ClCompile Include="NetworkLogic.cpp" />
