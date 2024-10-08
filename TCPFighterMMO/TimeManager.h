@@ -7,11 +7,11 @@ private:
 	~TimeManager() {};
 
 	unsigned int nextTick;
+	unsigned int prevTick;
 	unsigned int frameTick;
 	unsigned int oldTick;
 	unsigned int currentTick;
 	int logicFrameTime = 40;
-	int fps = 0;
 
 public:
 	static TimeManager* GetInstance(void)
@@ -19,6 +19,9 @@ public:
 		static TimeManager Sys;
 		return &Sys;
 	}
+
+	int currentFrameCount = 0;
+	int fps = 0;
 
 public:
 	void Init();

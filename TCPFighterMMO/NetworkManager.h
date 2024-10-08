@@ -34,7 +34,7 @@ public:
     void netProc_Send(Session* session);
     void netProc_Recv(Session* session);
     bool ProcessPacket(Session* session, char packetType, CPacket* packetData);
-
     SOCKET listenSocket;
+    int networkFps = 0;
 };
 

@@ -153,7 +153,7 @@ public:
 	// Parameters: (int) 이동 사이즈.
 	// Return: (int) 이동된 사이즈.
 	//////////////////////////////////////////////////////////////////////////
-	int		MoveWritePos(int iSize)
+	int		MoveReadPos(int iSize)
 	{
 		if (iSize <= 0)
 			throw std::runtime_error("Serialization buffer has been requested to move readPos minus value!");
@@ -165,7 +165,7 @@ public:
 
 		return iSize;
 	};
-	int		MoveReadPos(int iSize)
+	int		MoveWritePos(int iSize)
 	{
 		if (iSize <= 0)
 			throw std::runtime_error("Serialization buffer has been requested to move readPos minus value!");

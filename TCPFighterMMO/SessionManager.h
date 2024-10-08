@@ -34,7 +34,7 @@ public:
 		newSession->Clear();
 
 		newSession->sessionID = _id++;
-		_sessionMap[newSession->sessionID] = newSession;
+		_sessionMap.insert(std::make_pair( newSession->sessionID, newSession));
 		if (sessionCreateCallback)
 		{
 			sessionCreateCallback(newSession);  // 콜백 함수 호출

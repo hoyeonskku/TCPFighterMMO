@@ -100,6 +100,8 @@ void NetworkManager::netCleanUp()
 
 void NetworkManager::netIOProcess()
 {
+	networkFps++;
+
 	FD_SET rSet;
 	FD_SET wSet;
 
@@ -138,8 +140,6 @@ void NetworkManager::netIOProcess()
 		if (SelectRetval == -1)
 		{
 			DWORD error = WSAGetLastError();
-			if (error == 10022)
-				break;
 			std::cout << "select() error, code: " << WSAGetLastError() << std::endl;
 			DebugBreak();
 			g_bShutdown = false;
@@ -161,9 +161,11 @@ void NetworkManager::netIOProcess()
 				}
 			}
 			isSetIter++;
-			if (SelectRetval == 0)
-				break;
+			/*if (SelectRetval == 0)
+				break;*/
 		}
+		if (SelectRetval != 0)
+			DebugBreak(); 
 	}
 
 	FD_ZERO(&rSet);
@@ -205,13 +207,20 @@ void NetworkManager::netIOProcess()
 			}
 		}
 		isSetIter++;
-		if (SelectRetval == 0)
-			break;
+		/*if (SelectRetval == 0)
+			break;*/
 	}
 
 	// 리슨소켓이 리드셋에 있는 경우 accept 요청이 있음.
 	if (FD_ISSET(listenSocket, &rSet))
+	{
+		SelectRetval--;
 		netProc_Accept();
+	}
+
+
+	if (SelectRetval != 0)
+		DebugBreak();
 
 	SessionManager::GetInstance()->RemoveSessions();
 }
@@ -297,12 +306,12 @@ void NetworkManager::Disconnect(Session* session)
 
 void NetworkManager::netProc_Recv(Session* session)
 {
+
 	int RecvRetval;
 	int RecvError;
 
 	// 통째로 리시브	
 	RecvRetval = recv(session->socket, session->recvBuffer->GetRearBufferPtr(), session->recvBuffer->DirectEnqueueSize(), 0);
-	session->recvBuffer->MoveRear(RecvRetval);
 	// Select에 반응이 보인 소켓에서 리시브가 0 -> 
 	if (RecvRetval == 0)
 	{
@@ -326,6 +335,8 @@ void NetworkManager::netProc_Recv(Session* session)
 		// 나머지 에러 체크를 위해 서버 셧다운
 		DebugBreak();
 	}
+
+	session->recvBuffer->MoveRear(RecvRetval);
 	while (true)
 	{
 		// 헤더만큼 읽을 수 있으면
@@ -362,7 +373,7 @@ void NetworkManager::netProc_Recv(Session* session)
 				session->recvBuffer->MoveFront(header.bySize);
 			}
 
-			packet->PutData(packetData, header.bySize);
+			packet->MoveWritePos(header.bySize);
 
 			// 패킷 처리
 			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, packet))

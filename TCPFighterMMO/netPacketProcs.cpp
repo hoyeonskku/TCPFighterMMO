@@ -29,18 +29,9 @@ using namespace std;
 
 bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 {
-	// cout << "# PACKET_RECV # SessionID:" << player->session->id << endl;
-	// cout << "dfPACKET_CS_MOVE_START # SessionID :" << player->session->id << " X : " << player->x << " Y : " << player->y << endl;
-
-	// 받은 패킷 해석
-
-
-
 	unsigned char Direction;
 	unsigned short x;
 	unsigned short y;
-
-
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
@@ -54,6 +45,7 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	packetInfo.serverX = player->x;
 	packetInfo.serverY = player->y;
 	packetInfo.serverDir = player->dir;
+	packetInfo.currentFrameCount = TimeManager::GetInstance()->currentFrameCount;
 	packetInfo.recivedTime = TimeManager::GetInstance()->GetCurrentTick();
 	session->packetQueue.Enqueue(packetInfo);
 	// 클라이언트 좌표에 대한 최소한의 에러체크
@@ -83,6 +75,8 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 {
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	/*if (player->moveFlag == false)
+		DebugBreak();*/
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	// 받은 패킷 해석
 	unsigned char Direction;
@@ -98,6 +92,7 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 	packetInfo.dir = Direction;
 	packetInfo.serverX = player->x;
 	packetInfo.serverY = player->y;
+	packetInfo.currentFrameCount = TimeManager::GetInstance()->currentFrameCount;
 	packetInfo.serverDir = player->dir;
 	packetInfo.recivedTime = TimeManager::GetInstance()->GetCurrentTick();
 

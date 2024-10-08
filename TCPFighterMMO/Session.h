@@ -14,6 +14,7 @@ public:
 	int serverX;
 	int serverY;
 	int serverDir;
+	int currentFrameCount;
 };
 
 class PacketQueue {
@@ -42,7 +43,7 @@ public:
 		}
 	}
 
-private:
+public:
 	static const int MAX_SIZE = 10;
 	PacketInfo queue[MAX_SIZE];
 	int head;   // 큐의 시작점
@@ -63,7 +64,7 @@ public:
 		delete recvBuffer;
 	}
 	SOCKET socket;
-	bool deathFlag;
+	bool deathFlag = false;
 	unsigned short port;
 	char ip[16];
 	CRingBuffer* sendBuffer;
@@ -76,5 +77,8 @@ public:
 	{
 		sendBuffer->ClearBuffer();
 		recvBuffer->ClearBuffer();
+		packetQueue.size = 0;
+		packetQueue.head = 0;
+		packetQueue.tail = 0;
 	}
 };
