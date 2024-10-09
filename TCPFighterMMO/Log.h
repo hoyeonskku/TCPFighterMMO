@@ -15,6 +15,8 @@ extern WCHAR g_szLogBuff[1024];
 // 로그 함수 선언
 void Log(WCHAR* szString, int iLogLevel);
 
+void FlushLogBuffer();
+
 // 매크로 정의
 #define _LOG(LogLevel, fmt, ...)								   \
 do {															   \

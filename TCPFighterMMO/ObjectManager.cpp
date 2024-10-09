@@ -9,5 +9,7 @@ void ObjectManager::Update()
 	{
 		for (auto& pair : ObjectMap)
 			pair.second->Update();
+
+		FlushLogBuffer();
 	}
 }
