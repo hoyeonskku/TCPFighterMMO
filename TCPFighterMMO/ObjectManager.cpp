@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "ObjectManager.h"
+#include "NetworkManager.h"
 #include "TimeManager.h"
 #include "Player.h"
+#include "NetworkLogic.h"
 
 void ObjectManager::Update()
 {
@@ -9,7 +11,7 @@ void ObjectManager::Update()
 	{
 		for (auto& pair : ObjectMap)
 			pair.second->Update();
-
+		// 로그 버퍼 지연처리 -> 시스템콜 최소화
 		FlushLogBuffer();
 	}
 }

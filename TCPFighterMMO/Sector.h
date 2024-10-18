@@ -14,12 +14,8 @@ struct SectorPos
 class Sector
 {
 public:
-	Sector()
-	{
-	}
-	~Sector()
-	{
-	}
+	Sector() {}
+	~Sector() {}
 
 	int x;
 	int y;

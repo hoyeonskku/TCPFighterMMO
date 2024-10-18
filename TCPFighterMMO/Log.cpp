@@ -39,6 +39,8 @@ void Log(WCHAR* szString, int iLogLevel)
     // 로그 메시지를 생성
     WCHAR logMessage[1024];
     swprintf(logMessage, 1024, L"[%s] [%s] %s\n", timeBuffer, logLevelStr, szString);
+
+    g_LogBuffer.push_back(logMessage);
 }
 
 // 한 프레임에 한 번 호출하여 로그를 파일에 기록하는 함수

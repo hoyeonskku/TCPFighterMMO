@@ -37,6 +37,7 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	*pPacket >> Direction >> x >> y;
 
+	// 디버깅용 코드
 	/*PacketInfo packetInfo;
 	packetInfo.packetId = dfPACKET_CS_MOVE_START;
 	packetInfo.x = x;
@@ -85,6 +86,7 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 
 	*pPacket >> Direction >> x >> y;
 
+	// 디버깅용 코드
 	/*PacketInfo packetInfo;
 	packetInfo.packetId = dfPACKET_CS_MOVE_STOP;
 	packetInfo.x = x;
@@ -98,8 +100,6 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 
 	session->packetQueue.Enqueue(packetInfo);*/
 
-	// cout << "# PACKET_RECV # SessionID:" << player->session->id << endl;
-	// cout << "dfPACKET_CS_MOVE_STOP # SessionID :" << player->session->id << " X : " << player->x << " Y : " << player->y << endl;
 	// 클라이언트 좌표에 대한 최소한의 에러체크
 	if ((abs(x - player->x) > dfERROR_RANGE) ||
 		(abs(y - player->y) > dfERROR_RANGE))

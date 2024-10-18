@@ -3,6 +3,7 @@
 
 #define BUFFERSIZE 20000
 
+// 디버깅용 패킷 인포, 이슈 추적 시에만 사용
 //struct PacketInfo
 //{
 //public:

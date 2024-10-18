@@ -26,7 +26,9 @@ NetworkManager* NetworkManager::GetInstance()
 
 int NetworkManager::netInit(IPacketProcessor* customProcessor)
 {
+	// 패킷 프로세서 등록
 	packetProcessor = customProcessor;
+
 	int WSAStartUpRetval;
 	int SocketRetval;
 	int IoctlsocketRetval;
@@ -99,6 +101,7 @@ void NetworkManager::netCleanUp()
 
 void NetworkManager::netIOProcess()
 {
+	// 네트워크 프레임 측정
 	networkFps++;
 
 	FD_SET rSet;
@@ -123,14 +126,16 @@ void NetworkManager::netIOProcess()
 
 	auto setIter = sessionList.begin();
 	auto isSetIter = sessionList.begin();
+	// 64개 세션씩 순회
 	while (sessionListSize >= 64)
 	{
 		FD_ZERO(&rSet);
 		FD_ZERO(&wSet);
+		// 셋에 세션 하나씩 등록
 		for (int i = 0; i < 64; i++)
 		{
 			FD_SET((*setIter).second->socket, &rSet);
-
+			// 보낼 데이터가 있을때에만 wSet에 등록
 			if ((*setIter).second->sendBuffer->GetUseSize() != 0)
 				FD_SET((*setIter).second->socket, &wSet);
 			setIter++;
@@ -161,6 +166,7 @@ void NetworkManager::netIOProcess()
 				}
 			}
 			isSetIter++;
+			// 전부 확인했다면 다음 루프로 이동, 이터레이터 또한 갱신
 			if (SelectRetval == 0)
 			{
 				isSetIter = setIter;
@@ -168,7 +174,7 @@ void NetworkManager::netIOProcess()
 			}
 		}
 	}
-
+	// 마지막 루프(if문 검사를 없애기 위해 마지막 루프만 밖으로 빼서 시도
 	FD_ZERO(&rSet);
 	FD_ZERO(&wSet);
 	
@@ -251,38 +257,12 @@ void NetworkManager::netProc_Accept()
 		session->port = ntohs(clientaddr.sin_port);
 		strcpy_s(session->ip, sizeof(session->ip), addr_str);
 	}
-	//SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
-	//if (clientSock == INVALID_SOCKET)
-	//{
-	//	acceptError = WSAGetLastError();
-	//	_LOG(dfLOG_LEVEL_ERROR, L"accept() error, code %d", acceptError);
-	//	DebugBreak();
-	//	g_bShutdown = false;
-	//	return;
-	//}
-	//// 세션 생성
-	//Session* session = SessionManager::GetInstance()->CreateSession();
-	//session->socket = clientSock;
-
-	//inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
-	//session->port = ntohs(clientaddr.sin_port);
-	//strcpy_s(session->ip, sizeof(session->ip), addr_str);
-	
 }
 
 void NetworkManager::SendUnicast(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket)
 {
 	session->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
 	int size = session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
-
-#ifdef _DEBUG
-	if (size != pHeader->bySize)
-	{
-		DebugBreak();
-		_LOG(dfLOG_LEVEL_ERROR, L"LingBuffer OverFlow");
-}
-#endif // _DEBUG
-
 }
 
 void NetworkManager::SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHeader, CPacket* pPacket)
@@ -301,7 +281,7 @@ void NetworkManager::Disconnect(Session* session)
 {
 	if (session->deathFlag == true)
 		return;
-
+	// 지연 삭제를 위해 셋에 등록
 	SessionManager::GetInstance()->ReserveDeleteSession(session);
 	session->deathFlag = true;
 }
@@ -313,7 +293,7 @@ void NetworkManager::netProc_Recv(Session* session)
 
 	// 통째로 리시브	
 	RecvRetval = recv(session->socket, session->recvBuffer->GetRearBufferPtr(), session->recvBuffer->DirectEnqueueSize(), 0);
-	// Select에 반응이 보인 소켓에서 리시브가 0 -> 
+	// Select에 반응이 보인 소켓에서 리시브가 0 -> 세션 정상 종료
 	if (RecvRetval == 0)
 	{
 		_LOG(dfLOG_LEVEL_ERROR, L"Recv() 0 Disconnect.");

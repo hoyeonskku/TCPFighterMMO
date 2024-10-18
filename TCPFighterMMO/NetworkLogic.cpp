@@ -7,17 +7,16 @@
 #include "SectorManager.h"
 #include "Player.h"
 
-int SyncCount = 0;
+int g_SyncCount = 0;
 
 void SynchronizePos(Player* player)
 {
-	SyncCount++;
+	g_SyncCount++;
 	st_PACKET_HEADER header;
 	CPacket packet;
 
 	mpSync(&header, &packet, player->x, player->y, player->sessionID);
-	//SectorManager::GetInstance()->SendAround(player->session, &header, &packet, true);
-	NetworkManager::GetInstance()->SendUnicast(player->session, &header, &packet);
+	SectorManager::GetInstance()->SendAround(player->session, &header, &packet, true);
 
-	_LOG(dfLOG_LEVEL_DEBUG, L"Sync Count : %d", SyncCount);
+	_LOG(dfLOG_LEVEL_DEBUG, L"Sync Count : %d", g_SyncCount);
 }

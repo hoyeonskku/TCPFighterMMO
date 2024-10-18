@@ -80,7 +80,7 @@ void CreatePlayer(Session* session)
 			}
 		}
 	}
-
+	// 플레이어 섹터에 추가
 	SectorManager::GetInstance()->InsertPlayerInSector(player);
 	return;
 }
@@ -96,6 +96,7 @@ void DeletePlayer(Session* session)
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 
 	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	// 섹터에 제거, 플레이어 맵에서 제거
 	SectorManager::GetInstance()->DeletePlayerInSector(player);
 	ObjectManager::GetInstance()->DeletePlayer(player);
 	ObjectManager::GetInstance()->playerPool.Free(player);
@@ -120,30 +121,19 @@ void Player::Update()
 
 		// 범위 밖으로 벗어나면
 		if (tempX < dfRANGE_MOVE_LEFT)
-		{
-			//session->player->x = dfRANGE_MOVE_LEFT;
 			return;
-		}
 		if (tempX >= dfRANGE_MOVE_RIGHT)
-		{
-			//session->player->x = dfRANGE_MOVE_RIGHT;
 			return;
-		}
 		if (tempY < dfRANGE_MOVE_TOP)
-		{
-			//session->player->y = dfRANGE_MOVE_TOP;
 			return;
-		}
 		if (tempY >= dfRANGE_MOVE_BOTTOM)
-		{
-			//session->player->y = dfRANGE_MOVE_BOTTOM;
 			return;
-		}
+
 		// 조건에 부합하는 경우에만 값 갱신
 		y = tempY;
 		x = tempX;
 
-		//std::cout << "x :" << x << "y :" << y << std::endl;
+		// 플레이어 섹터 이동 처리
 		SectorManager::GetInstance()->SectorMove(this);
 	}
 }

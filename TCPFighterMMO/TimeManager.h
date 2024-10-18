@@ -25,7 +25,7 @@ public:
 
 public:
 	void Init();
-	// 프레임 설정 함수, 기본값은 50fps임.
+	// 프레임 설정 함수, 기본값은 25fps임.
 	void SetFPS(int FPS)
 	{
 		logicFrameTime = 1000 / FPS;

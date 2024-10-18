@@ -9,6 +9,7 @@
 #include "Player.h"
 #include "SerializingBuffer.h"
 
+// 섹터 초기화, 메모리 침범을 줄이기 위해 테두리 빈 섹터 1줄 추가
 void SectorManager::Init()
 {
     _sectorArray = new Sector **[dfRANGE_SECTOR_Y];
@@ -23,7 +24,7 @@ void SectorManager::Init()
         }
     }
 }
-
+// 섹터가 컨텐츠 코드이기 때문에 SendUnicast를 래핑해서 사용
 void SectorManager::SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int x, int y, Session* elseSession)
 {
     for (Player* player : _sectorArray[y][x]->_playerSet)

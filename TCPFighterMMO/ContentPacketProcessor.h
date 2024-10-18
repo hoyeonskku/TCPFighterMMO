@@ -11,10 +11,11 @@ class ContentPacketProcessor : public IPacketProcessor
 {
 public:
 	// 패킷 처리 함수
-	// 주의! 점프 테이블 생성을 위한 순서 보장해주기
+	// 점프 테이블 생성을 위한 순서 보장해주기
 	virtual ~ContentPacketProcessor() {}
 	bool ProcessPacket(Session* session, unsigned char packetType, CPacket* packetData) 
 	{
+		// 직렬화버퍼 예외처리
 		try
 		{
 			switch (packetType)

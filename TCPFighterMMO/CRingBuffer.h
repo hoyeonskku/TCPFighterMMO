@@ -97,6 +97,16 @@ public:
 		}
 
 		_size += iSize;
+
+		// 디버그 모드에서만 링버퍼 오버플로우 검증
+#ifdef _DEBUG
+		if (_capacity < _size)
+		{
+			DebugBreak();
+			_LOG(dfLOG_LEVEL_ERROR, L"LingBuffer OverFlow");
+		}
+#endif // _DEBUG
+
 		return iSize;
 	}
 

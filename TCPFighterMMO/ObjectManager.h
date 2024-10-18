@@ -24,9 +24,7 @@ public:
 		const auto& it = ObjectMap.find(sessionID);
 
 		if (it != ObjectMap.end())
-		{
 			return it->second;
-		}
 
 		return nullptr;
 	}
@@ -35,9 +33,8 @@ public:
 	{
 		auto it = ObjectMap.find(player->sessionID);
 		if (it != ObjectMap.end())
-		{
 			return false;
-		}
+
 		ObjectMap.insert(std::make_pair(player->sessionID, player));
 		return true;
 	}
@@ -46,9 +43,8 @@ public:
 	{
 		auto it = ObjectMap.find(player->sessionID);
 		if (it == ObjectMap.end())
-		{
 			return false;
-		}
+
 		ObjectMap.erase(it);
 		return true;
 	}

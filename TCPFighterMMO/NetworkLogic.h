@@ -4,4 +4,4 @@ class Player;
 
 void SynchronizePos(Player* player);
 
-extern int SyncCount;
+extern int g_SyncCount;

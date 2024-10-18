@@ -20,7 +20,9 @@ int main()
 
 	while (!g_bShutdown)
 	{
+		// 네트워크 루프
 		NetworkManager::GetInstance()->netIOProcess();
+		// 컨텐츠 루프
 		ObjectManager::GetInstance()->Update();
 	}
 	NetworkManager::GetInstance()->netCleanUp();
