@@ -16,7 +16,6 @@ int main()
 	NetworkManager::GetInstance()->netInit(new ContentPacketProcessor);
 	SessionManager::GetInstance()->Init(CreatePlayer, DeletePlayer);
 	SectorManager::GetInstance()->Init();
-	TimeManager::GetInstance()->Init();
 
 	while (!g_bShutdown)
 	{

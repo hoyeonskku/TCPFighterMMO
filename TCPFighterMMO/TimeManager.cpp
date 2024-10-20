@@ -6,7 +6,7 @@
 #include <iostream>
 #pragma comment(lib, "winmm.lib")
 
-void TimeManager::Init()
+TimeManager::TimeManager()
 {
 	timeBeginPeriod(1);
 	frameTick = timeGetTime();
