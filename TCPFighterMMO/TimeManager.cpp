@@ -9,15 +9,13 @@
 void TimeManager::Init()
 {
 	timeBeginPeriod(1);
-	nextTick = timeGetTime();
-	frameTick = nextTick;
+	frameTick = timeGetTime();
+	nextTick = frameTick + logicFrameTime;
 }
 
 bool TimeManager::CheckLogicFrameTime()
 {
-	//prevTick = currentTick;
 	currentTick = timeGetTime();
-	//std::cout << currentTick - prevTick << std::endl;
 	if (currentTick > nextTick)
 	{
 		fps++;
