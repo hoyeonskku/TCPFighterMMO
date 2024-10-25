@@ -9,6 +9,7 @@
 
 int g_SyncCount = 0;
 
+// 싱크 난 경우 주위에 전파하는 데 사용, 현재 구조에서는 sandUnicast 해도 상관 없으나, 보통 sendAround를 해야 하므로 여기서도 sendAround로 사용.
 void SynchronizePos(Player* player)
 {
 	g_SyncCount++;

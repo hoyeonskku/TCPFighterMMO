@@ -9,8 +9,11 @@ private:
 	~SessionManager() {};
 
 	std::unordered_map<int, Session*> _sessionMap;
+	// 지연 삭제될 세션 리스트
 	std::list<int> _toDeletedSessionId;
 	CMemoryPool<Session, true> sessionPool = CMemoryPool<Session, true>(0);
+
+	// 세션 생성 및 삭제 시에 사용될 콜백, 컨텐츠에서 정의
 	void (*sessionDeleteCallback)(Session*) = nullptr;
 	void (*sessionCreateCallback)(Session*) = nullptr;
 
@@ -73,5 +76,6 @@ public:
 
 public:
 	std::unordered_map<int, Session*>& GetSessionMap() { return _sessionMap; }
+	// 세션 아이디 발급용
 	int _id = 0;
 };

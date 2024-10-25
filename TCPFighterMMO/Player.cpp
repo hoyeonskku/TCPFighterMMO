@@ -11,6 +11,13 @@
 #include "TimeManager.h"
 #include <string>
 
+
+// 이동, 섹터 순회에 이용되는 변수를 player static 변수로 저장하여 재할당 억제
+const int Player::sectorDir[9][2] = { {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, 0} };
+
+//int direction[8][2] = { {0, -3}, {-2, -3}, {-2, 0}, {-2, 3}, {0, 3}, {2, 3}, {2, 0}, {2, -3} }
+const int Player::direction[8][2] = { {0, -6}, {-4, -6}, {-4, 0}, {-4, 6}, {0, 6}, {4, 6}, {4, 0}, {4, -6} };
+
 // 플레이어 생성 콜백함수
 // 세선 생성시 이 콜백함수가 실행됨
 void CreatePlayer(Session* session)
@@ -50,13 +57,11 @@ void CreatePlayer(Session* session)
 	SectorManager::GetInstance()->SendAround(session, &BroadcastMyCharacterToOthersHeader, BroadcastMyCharacterToOthersPacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(BroadcastMyCharacterToOthersPacket);
 
-	int direction[9][2] = { {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, 0} };
-
 	// 다른 캐릭터 생성
 	for (int i = 0; i < 9; i++)
 	{
-		int dy = player->sectorPos.y + direction[i][0];
-		int dx = player->sectorPos.x + direction[i][1];
+		int dy = player->sectorPos.y + Player::sectorDir[i][0];
+		int dx = player->sectorPos.x + Player::sectorDir[i][1];
 		const auto& playerUSet = SectorManager::GetInstance()->GetSectorPlayerSet(dy, dx);
 		
 		for (Player* searchedPlayer : playerUSet)
@@ -113,11 +118,9 @@ void Player::Update()
 	}
 	if (moveFlag == true)
 	{
-		int direction[8][2] = { {0, -6}, {-4, -6}, {-4, 0}, {-4, 6}, {0, 6}, {4, 6}, {4, 0}, {4, -6} };
-		//int direction[8][2] = { {0, -3}, {-2, -3}, {-2, 0}, {-2, 3}, {0, 3}, {2, 3}, {2, 0}, {2, -3} };
 		int tempX, tempY;
-		tempY = y + direction[dir][0];
-		tempX = x + direction[dir][1];
+		tempY = y + Player::direction[dir][0];
+		tempX = x + Player::direction[dir][1];
 
 		// 범위 밖으로 벗어나면
 		if (tempX < dfRANGE_MOVE_LEFT)

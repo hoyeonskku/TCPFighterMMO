@@ -3,11 +3,6 @@
 #include <iostream>
 #include <assert.h>
 
-/////////////////////////////////////////////////////////////////////
-// www.gamecodi.com						이주행 master@gamecodi.com
-//
-//
-/////////////////////////////////////////////////////////////////////
 class CRingBuffer
 {
 public:
@@ -189,7 +184,8 @@ public:
 	// Parameters: 없음.
 	// Return: (int)사용가능 용량.
 	////////////////////////////////////////////////////////////////////////
-	int	DirectEnqueueSize(void)
+	int	
+		EnqueueSize(void)
 	{
 		if (_size == _capacity)
 			return 0;

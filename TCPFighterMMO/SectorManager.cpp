@@ -37,13 +37,12 @@ void SectorManager::SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int 
 
 void SectorManager::SendAround(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket, bool bSendMe)
 {
-    int direction[9][2] = { {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, 0} };
-
     Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
     for (int i = 0; i < 9; i++)
     {
-        int dy = player->sectorPos.y + direction[i][0];
-        int dx = player->sectorPos.x + direction[i][1];
+        // 플레이어에 있는 sectorDir 재활용했는데 이걸 오브젝트 상위객체에 이동해야할 지 고민중.
+        int dy = player->sectorPos.y + Player::sectorDir[i][0];
+        int dx = player->sectorPos.x + Player::sectorDir[i][1];
         {
             if (bSendMe == false)
                 SendSector(pHeader, pPacket, dx, dy, session);
