@@ -1,6 +1,6 @@
+#pragma once
 #ifndef  __MEMORY_POOL__
 #define  __MEMORY_POOL__
-#pragma once
 
 
 #include <new.h>

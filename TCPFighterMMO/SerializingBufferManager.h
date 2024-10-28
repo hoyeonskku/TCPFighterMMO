@@ -15,7 +15,5 @@ public:
 		return &Sys;
 	}
 
-	
 	CMemoryPool<CPacket, true> _cPacketPool = CMemoryPool<CPacket, true>(0);
-
 };

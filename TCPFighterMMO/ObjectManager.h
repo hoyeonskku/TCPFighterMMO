@@ -52,7 +52,6 @@ public:
 	void Update();
 
 	CMemoryPool<Player, true> playerPool = CMemoryPool<Player, true>(0);
-
 public:
 	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }
 };
