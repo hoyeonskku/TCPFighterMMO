@@ -103,12 +103,13 @@ public:
 			return 0; // 데이터 추가를 방지
 		}
 #endif
-		DebugLog debugLog;
+		/*DebugLog debugLog;
 		debugLog._prevFront = _front;
-		debugLog._prevRear = _rear;
+		debugLog._prevRear = _rear;*/
 
-		if (GetFreeSize() < iSize)
-			iSize = GetFreeSize(); // 남은 공간에 맞게 크기 조정
+		int freeSize = GetFreeSize();
+		if (freeSize < iSize)
+			iSize = freeSize; // 남은 공간에 맞게 크기 조정
 
 		int firstPart = _capacity - _rear;
 		if (firstPart >= iSize)
@@ -123,10 +124,10 @@ public:
 			_rear = (_rear + iSize) % _capacity;
 		}
 
-		debugLog._currentFront = _front;
+		/*debugLog._currentFront = _front;
 		debugLog._currentRear = _rear;
 		debugLog._moveRearValue = iSize;
-		_debugLogList.push_back(debugLog);
+		_debugLogList.push_back(debugLog);*/
 		return iSize;
 	}
 
@@ -138,9 +139,9 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	int	Dequeue(char* chpDest, int iSize)
 	{
-		DebugLog debugLog;
+		/*DebugLog debugLog;
 		debugLog._prevFront = _front;
-		debugLog._prevRear = _rear;
+		debugLog._prevRear = _rear;*/
 		int size = GetUseSize();
 		if (size < iSize)
 			iSize = size; // 요청한 크기보다 실제 데이터 크기가 작을 경우
@@ -158,10 +159,10 @@ public:
 			_front = (_front + iSize) % _capacity;
 		}
 
-		debugLog._currentFront = _front;
+		/*debugLog._currentFront = _front;
 		debugLog._currentRear = _rear;
 		debugLog._moveFrontValue = iSize;
-		_debugLogList.push_back(debugLog);
+		_debugLogList.push_back(debugLog);*/
 
 		return iSize;
 	}
@@ -271,7 +272,7 @@ public:
 	int _front = 0;
 	int _capacity;
 
-	std::list<DebugLog> _debugLogList;
+	//std::list<DebugLog> _debugLogList;
 };
 
 

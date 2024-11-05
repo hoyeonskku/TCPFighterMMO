@@ -296,9 +296,9 @@ void NetworkManager::netProc_Recv(Session* session)
 	int RecvError;
 
 	// 디버깅용 코드
-	DebugLog debugLog;
+	/*DebugLog debugLog;
 	debugLog._prevFront = session->recvBuffer->_front;
-	debugLog._prevRear = session->recvBuffer->_rear;
+	debugLog._prevRear = session->recvBuffer->_rear;*/
 
 
 
@@ -335,10 +335,10 @@ void NetworkManager::netProc_Recv(Session* session)
 
 	session->recvBuffer->MoveRear(RecvRetval);
 	// 디버깅용 코드
-	debugLog._currentFront = session->recvBuffer->_front;
+	/*debugLog._currentFront = session->recvBuffer->_front;
 	debugLog._currentRear = session->recvBuffer->_rear;
 	debugLog._moveRearValue = RecvRetval;
-	session->recvBuffer->_debugLogList.push_back(debugLog);
+	session->recvBuffer->_debugLogList.push_back(debugLog);*/
 
 	while (true)
 	{
@@ -358,9 +358,9 @@ void NetworkManager::netProc_Recv(Session* session)
 
 			char* packetData = packet->GetBufferPtr();
 			// 디버깅용 코드
-			DebugLog debugLog1;
+			/*DebugLog debugLog1;
 			debugLog1._prevFront = session->recvBuffer->_front;
-			debugLog1._prevRear = session->recvBuffer->_rear;
+			debugLog1._prevRear = session->recvBuffer->_rear;*/
 			// 사이즈보다 경계까지의 값이 작다면
 			if (session->recvBuffer->DirectDequeueSize() < header.bySize)
 			{
@@ -381,10 +381,10 @@ void NetworkManager::netProc_Recv(Session* session)
 
 			packet->MoveWritePos(header.bySize);
 			// 디버깅용 코드
-			debugLog1._currentFront = session->recvBuffer->_front;
+			/*debugLog1._currentFront = session->recvBuffer->_front;
 			debugLog1._currentRear = session->recvBuffer->_rear;
 			debugLog1._moveFrontValue = header.bySize;
-			session->recvBuffer->_debugLogList.push_back(debugLog1);
+			session->recvBuffer->_debugLogList.push_back(debugLog1);*/
 			// 패킷 처리
 			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, packet))
 			{
@@ -443,18 +443,18 @@ void NetworkManager::netProc_Send(Session* session)
 		}
 		session->sendBuffer->MoveFront(sentBytes);
 		// 디버깅용 코드
-		debugLog._currentFront = session->sendBuffer->_front;
+		/*debugLog._currentFront = session->sendBuffer->_front;
 		debugLog._currentRear = session->sendBuffer->_rear;
 		debugLog._moveFrontValue = sentBytes;
-		session->sendBuffer->_debugLogList.push_back(debugLog);
+		session->sendBuffer->_debugLogList.push_back(debugLog);*/
 	}
 	else
 	{
 		// 링버퍼의 경계를 넘어가는 경우
 			// 디버깅용 코드
-		DebugLog debugLog;
+		/*DebugLog debugLog;
 		debugLog._prevFront = session->sendBuffer->_front;
-		debugLog._prevRear = session->sendBuffer->_rear;
+		debugLog._prevRear = session->sendBuffer->_rear;*/
 
 		int sentBytes = send(session->socket, session->sendBuffer->GetFrontBufferPtr(), session->sendBuffer->DirectDequeueSize(), 0);
 		// 전송 실패 -> select 모델에선 소켓 종료뿐
@@ -483,10 +483,10 @@ void NetworkManager::netProc_Send(Session* session)
 		}
 		session->sendBuffer->MoveFront(sentBytes);
 		//// 디버깅용 코드
-		debugLog._currentFront = session->sendBuffer->_front;
+		/*debugLog._currentFront = session->sendBuffer->_front;
 		debugLog._currentRear = session->sendBuffer->_rear;
 		debugLog._moveFrontValue = sentBytes;
-		session->sendBuffer->_debugLogList.push_back(debugLog);
+		session->sendBuffer->_debugLogList.push_back(debugLog);*/
 	}
 }
 

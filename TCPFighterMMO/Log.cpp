@@ -46,6 +46,9 @@ void Log(WCHAR* szString, int iLogLevel)
 // 한 프레임에 한 번 호출하여 로그를 파일에 기록하는 함수
 void FlushLogBuffer()
 {
+    if (g_LogBuffer.size() == 0)
+        return;
+
     // 파일 쓰기 모드로 텍스트 파일 열기
     FILE* pFile = nullptr;
     _wfopen_s(&pFile, dfLOG_FILE_PATH, L"a, ccs=UTF-16LE");
