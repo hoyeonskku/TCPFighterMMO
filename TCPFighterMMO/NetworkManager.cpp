@@ -30,7 +30,6 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 	packetProcessor = customProcessor;
 
 	int WSAStartUpRetval;
-	int SocketRetval;
 	int IoctlsocketRetval;
 	int BindRetval;
 	int ListenRetval;
@@ -53,7 +52,8 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 	listenSocket = ::socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket == INVALID_SOCKET)
 	{
-		_LOG(dfLOG_LEVEL_ERROR, L"socket Error");
+		SocketError = WSAGetLastError();
+		_LOG(dfLOG_LEVEL_ERROR, L"socket() error, code %d", SocketError);
 		g_bShutdown = false;
 		return 0;
 	}
@@ -111,13 +111,12 @@ void NetworkManager::netIOProcess()
 	int addrLen = sizeof(clientAddr);
 	std::unordered_map<int, Session*>& sessionList = SessionManager::GetInstance()->GetSessionMap();
 
-	int sessionListSize = sessionList.size();
+	size_t sessionListSize = sessionList.size();
 
 	struct timeval timeout;
 	timeout.tv_sec = 0;  // 초 단위 설정
 	timeout.tv_usec = 0; // 마이크로초 단위 설정
 
-	SOCKET client_sock;
 	SOCKADDR_IN clientaddr;
 	char addr_str[INET_ADDRSTRLEN];
 
@@ -232,26 +231,27 @@ void NetworkManager::netIOProcess()
 void NetworkManager::netProc_Accept()
 {
 	char addr_str[INET_ADDRSTRLEN];
+	SOCKET client_sock;
 	SOCKADDR_IN clientaddr;
 	int addrlen = sizeof(clientaddr);
 	int acceptError;
 	while (true)
 	{
-		SOCKET clientSock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
-		if (clientSock == INVALID_SOCKET)
+		client_sock = accept(listenSocket, (SOCKADDR*)&clientaddr, &addrlen);
+		if (client_sock == INVALID_SOCKET)
 		{
 			if (WSAGetLastError() == WSAEWOULDBLOCK) 
 				// 더 이상 처리할 클라이언트가 없으므로 루프 종료
 				break;
-			std::cout << "accept() error" << std::endl;
-			std::cout << WSAGetLastError() << std::endl;
-			DebugBreak();
+
+			acceptError = WSAGetLastError();
+			_LOG(dfLOG_LEVEL_ERROR, L"accept() error, code %d", acceptError);
 			g_bShutdown = false;
 			return;
 		}
 		// 세션 생성
 		Session* session = SessionManager::GetInstance()->CreateSession();
-		session->socket = clientSock;
+		session->socket = client_sock;
 
 		inet_ntop(AF_INET, &clientaddr.sin_addr, addr_str, sizeof(addr_str));
 		session->port = ntohs(clientaddr.sin_port);
@@ -401,7 +401,7 @@ void NetworkManager::netProc_Recv(Session* session)
 
 void NetworkManager::netProc_Send(Session* session)
 {
-	int SendRetval;
+	int SentBytes;
 	int SendError;
 	// 보내야 할 데이터 크기 확인
 	int dataSize = session->sendBuffer->GetUseSize();
@@ -417,9 +417,9 @@ void NetworkManager::netProc_Send(Session* session)
 	debugLog._prevFront = session->sendBuffer->_front;
 	debugLog._prevRear = session->sendBuffer->_rear;
 		// 데이터를 한 번에 전송
-		int sentBytes = send(session->socket, session->sendBuffer->GetFrontBufferPtr(), dataSize, 0);
+		SentBytes = send(session->socket, session->sendBuffer->GetFrontBufferPtr(), dataSize, 0);
 
-		if (sentBytes == SOCKET_ERROR)
+		if (SentBytes == SOCKET_ERROR)
 		{
 			SendError = WSAGetLastError();
 
@@ -441,7 +441,7 @@ void NetworkManager::netProc_Send(Session* session)
 			DebugBreak();
 			g_bShutdown = false;
 		}
-		session->sendBuffer->MoveFront(sentBytes);
+		session->sendBuffer->MoveFront(SentBytes);
 		// 디버깅용 코드
 		/*debugLog._currentFront = session->sendBuffer->_front;
 		debugLog._currentRear = session->sendBuffer->_rear;

@@ -2,7 +2,6 @@
 #include <memory.h>
 #include <iostream>
 #include <assert.h>
-#include <list>
 
 class DebugLog
 {
@@ -64,10 +63,12 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	inline int GetUseSize(void)
 	{
-		if (_front <= _rear)
-			return _rear - _front;
+		int front = _front;
+		int rear = _rear;
+		if (front <= rear)
+			return rear - front;
 		else
-			return _capacity - _front + _rear;
+			return _capacity - front + rear;
 	};
 
 	///////////////////////////////////////////////////////////////////////
@@ -216,6 +217,7 @@ public:
 	{
 		if (_front > _rear)
 			return _front - _rear - 1;
+		// 사이즈 검증을 하지 않기 때문에 front0일때의 예외처리가 필요
 		if (_front == 0)
 			return _capacity - _rear - 1;
 		else
@@ -276,6 +278,8 @@ public:
 };
 
 
+// 이전에 사용하던 size 기반 링버퍼
+// 멀티스레드 적용을 위해 size가 아닌, front , rear에만 의존하는 링버퍼로 교체
 //#pragma once
 //#include <memory.h>
 //#include <iostream>
