@@ -92,6 +92,8 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 		g_bShutdown = false;
 		return 0;
 	}
+
+	return 0;
 }
 
 void NetworkManager::netCleanUp()

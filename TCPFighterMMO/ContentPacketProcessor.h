@@ -56,6 +56,7 @@ public:
 		{
 			std::cerr << "Caught an exception: " << e.what() << std::endl;
 			DebugBreak();
+			return false;
 		}
 	}
 
