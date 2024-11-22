@@ -214,7 +214,7 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);  
-						_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
+						//_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
 				}
@@ -317,7 +317,7 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
-						_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
+						//_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
 				}
@@ -421,7 +421,7 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
-						_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
+						//_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
 				}

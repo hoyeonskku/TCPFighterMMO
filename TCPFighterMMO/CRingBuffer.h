@@ -95,15 +95,15 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	int	Enqueue(const char* chpData, int iSize)
 	{
-#ifdef _DEBUG
+//#ifdef _DEBUG
 		// 디버그 모드에서만 링버퍼 오버플로우 검증
-		if (IsFull())
+		if (_capacity < GetUseSize() + iSize)
 		{
-			//_LOG(dfLOG_LEVEL_ERROR, L"RingBuffer Overflow");
-			//DebugBreak();
+			_LOG(dfLOG_LEVEL_ERROR, L"RingBuffer Overflow");
+			DebugBreak();
 			return 0; // 데이터 추가를 방지
 		}
-#endif
+//#endif
 		/*DebugLog debugLog;
 		debugLog._prevFront = _front;
 		debugLog._prevRear = _rear;*/
