@@ -6,8 +6,8 @@
 #include "NetworkLogic.h"
 
 void ObjectManager::Update()
-{
-	if (TimeManager::GetInstance()->CheckLogicFrameTime())
+{/*
+	if (TimeManager::GetInstance()->CheckLogicFrameTime())*/
 	{
 		for (auto& pair : ObjectMap)
 			pair.second->Update();
