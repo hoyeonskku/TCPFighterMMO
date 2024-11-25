@@ -16,8 +16,8 @@ void SynchronizePos(Player* player)
 	st_PACKET_HEADER header;
 	CPacket packet;
 
-	mpSync(&header, &packet, player->x, player->y, player->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &header, &packet, true);
+	mpSync(&header, &packet, player->x, player->y, player->_sessionID);
+	SectorManager::GetInstance()->SendAround(player->_sessionID, &header, &packet, true);
 
 	_LOG(dfLOG_LEVEL_DEBUG, L"Sync Count : %d", g_SyncCount);
 }

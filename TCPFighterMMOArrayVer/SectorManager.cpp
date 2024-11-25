@@ -3,11 +3,13 @@
 #include "PacketDefine.h"
 #include "MakePacket.h"
 #include "NetworkManager.h"
+#include "SessionManager.h"
 #include "ObjectManager.h"
 #include "Sector.h"
 #include "Session.h"
 #include "Player.h"
 #include "SerializingBuffer.h"
+#include "SerializingBufferManager.h"
 
 // 섹터 초기화, 메모리 침범을 줄이기 위해 테두리 빈 섹터 1줄 추가
 void SectorManager::Init()
@@ -25,19 +27,20 @@ void SectorManager::Init()
     }
 }
 // 섹터가 컨텐츠 코드이기 때문에 SendUnicast를 래핑해서 사용
-void SectorManager::SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int x, int y, Session* elseSession)
+void SectorManager::SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int x, int y, unsigned long long elseSessionID)
 {
     for (Player* player : _sectorArray[y][x]->_playerSet)
     {
-        if (player->session == elseSession)
+        if (player->_sessionID == elseSessionID)
             continue;
-        NetworkManager::GetInstance()->SendUnicast(player->session, pHeader, pPacket);
+        NetworkManager::GetInstance()->SendUnicast(player->_sessionID, pHeader, pPacket);
     }
 }
 
-void SectorManager::SendAround(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket, bool bSendMe)
+void SectorManager::SendAround(unsigned long long sessionID, st_PACKET_HEADER* pHeader, CPacket* pPacket, bool bSendMe)
 {
-    Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+    int index = SessionManager::GetInstance()->GetIndexBySessionID(sessionID);
+    Player* player = ObjectManager::GetInstance()->GetPlayer(sessionID);
     for (int i = 0; i < 9; i++)
     {
         // 플레이어에 있는 sectorDir 재활용했는데 이걸 오브젝트 상위객체에 이동해야할 지 고민중.
@@ -45,7 +48,7 @@ void SectorManager::SendAround(Session* session, st_PACKET_HEADER* pHeader, CPac
         int dx = player->sectorPos.x + Player::sectorDir[i][1];
         {
             if (bSendMe == false)
-                SendSector(pHeader, pPacket, dx, dy, session);
+                SendSector(pHeader, pPacket, dx, dy, sessionID);
             else
                 SendSector(pHeader, pPacket, dx, dy);
         }
@@ -193,29 +196,35 @@ void SectorManager::SectorMove(Player* player)
     }
 
     // 영역마다 생성/ 삭제 메세지 보내고, 그 영역에 있던 플레이어의 생성/ 삭제 메세지 받음
+
+
+
+
     st_PACKET_HEADER playerCreateHeader;
-    CPacket playerCreatePacket;
-    mpCreateOtherCharacter(&playerCreateHeader, &playerCreatePacket, player->sessionID, player->dir, player->x, player->y, player->hp);
+    CPacket* playerCreatePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+    mpCreateOtherCharacter(&playerCreateHeader, playerCreatePacket, player->_sessionID, player->dir, player->x, player->y, player->hp);
 
     st_PACKET_HEADER playerDeleteHeader;
-    CPacket playerDeletePacket;
-    mpDelete(&playerDeleteHeader, &playerDeletePacket, player->sessionID);
+    CPacket* playerDeletePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+    mpDelete(&playerDeleteHeader, playerDeletePacket, player->_sessionID);
 
     st_PACKET_HEADER pMoveHeader;
-    CPacket pMovePacket;
+    CPacket* pMovePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+    mpMoveStart(&pMoveHeader, pMovePacket, player->dir, player->x, player->y, player->_sessionID);
 
-    mpMoveStart(&pMoveHeader, &pMovePacket, player->dir, player->x, player->y, player->session->sessionID);
     for (SectorPos& pos : createSectorList)
     {
         {
-            SendSector(&playerCreateHeader, &playerCreatePacket, pos.x, pos.y, player->session);
-            SendSector(&pMoveHeader, &pMovePacket, pos.x, pos.y, player->session);
+            SendSector(&playerCreateHeader, playerCreatePacket, pos.x, pos.y, player->_sessionID);
+            SendSector(&pMoveHeader, pMovePacket, pos.x, pos.y, player->_sessionID);
             for (Player* searchedPlayer : _sectorArray[pos.y][pos.x]->_playerSet)
             {
+                if (searchedPlayer->useFlag == false)
+                    DebugBreak();
                 st_PACKET_HEADER sectorPlayerCreateHeader;
                 CPacket sectorPlayerCreatePacket;
-                mpCreateOtherCharacter(&sectorPlayerCreateHeader, &sectorPlayerCreatePacket, searchedPlayer->sessionID, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->hp);
-                NetworkManager::GetInstance()->SendUnicast(player->session, &sectorPlayerCreateHeader, &sectorPlayerCreatePacket);
+                mpCreateOtherCharacter(&sectorPlayerCreateHeader, &sectorPlayerCreatePacket, searchedPlayer->_sessionID, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->hp);
+                NetworkManager::GetInstance()->SendUnicast(player->_sessionID, &sectorPlayerCreateHeader, &sectorPlayerCreatePacket);
 
                 // 움직이는 플레이어인 경우 무브 패킷도 보내줌
                 if (searchedPlayer->moveFlag == true)
@@ -223,8 +232,8 @@ void SectorManager::SectorMove(Player* player)
                     st_PACKET_HEADER pOtherPlayerMoveHeader;
                     CPacket pOtherPlayerMovePacket;
 
-                    mpMoveStart(&pOtherPlayerMoveHeader, &pOtherPlayerMovePacket, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->session->sessionID);
-                    NetworkManager::GetInstance()->SendUnicast(player->session, &pOtherPlayerMoveHeader, &pOtherPlayerMovePacket);
+                    mpMoveStart(&pOtherPlayerMoveHeader, &pOtherPlayerMovePacket, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->_sessionID);
+                    NetworkManager::GetInstance()->SendUnicast(player->_sessionID, &pOtherPlayerMoveHeader, &pOtherPlayerMovePacket);
                 }
             }
         }
@@ -232,16 +241,24 @@ void SectorManager::SectorMove(Player* player)
     for (SectorPos& pos : deleteSectorList)
     {
         {
-            SendSector(&playerDeleteHeader, &playerDeletePacket, pos.x, pos.y, player->session);
+            SendSector(&playerDeleteHeader, playerDeletePacket, pos.x, pos.y, player->_sessionID);
             for (Player* searchedPlayer : _sectorArray[pos.y][pos.x]->_playerSet)
             {
+                if (searchedPlayer->useFlag == false)
+                    DebugBreak();
                 st_PACKET_HEADER sectorPlayerDeleteHeader;
                 CPacket sectorPlayerDeletePacket;
-                mpDelete(&sectorPlayerDeleteHeader, &sectorPlayerDeletePacket, searchedPlayer->sessionID);
-                NetworkManager::GetInstance()->SendUnicast(player->session, &sectorPlayerDeleteHeader, &sectorPlayerDeletePacket);
+                mpDelete(&sectorPlayerDeleteHeader, &sectorPlayerDeletePacket, searchedPlayer->_sessionID);
+                NetworkManager::GetInstance()->SendUnicast(player->_sessionID, &sectorPlayerDeleteHeader, &sectorPlayerDeletePacket);
             }
         }
     }
+
+
+    SerializingBufferManager::GetInstance()->_cPacketPool.Free(playerCreatePacket);
+    SerializingBufferManager::GetInstance()->_cPacketPool.Free(playerDeletePacket);
+    SerializingBufferManager::GetInstance()->_cPacketPool.Free(pMovePacket);
+
     _sectorArray[player->sectorPos.y][player->sectorPos.x]->_playerSet.erase(player);
     player->sectorPos = nextSectorPos;
     _sectorArray[player->sectorPos.y][player->sectorPos.x]->_playerSet.insert(player);

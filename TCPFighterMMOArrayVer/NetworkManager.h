@@ -1,5 +1,5 @@
 #pragma once
-#define SERVERPORT 6000
+#define SERVERPORT 20000
 #include <list>
 #include <winsock2.h>
 #include <assert.h>
@@ -28,9 +28,9 @@ public:
     void netIOProcess();
     void netProc_Accept();
 
-    void SendUnicast(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket);
-    void SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHeader, CPacket* pPacket);
-    void Disconnect(Session* session);
+    void SendUnicast(unsigned long long sessionID, st_PACKET_HEADER* pHeader, CPacket* pPacket);
+    //void SendBroadCast(unsigned long long elseSessionID, st_PACKET_HEADER* pHeader, CPacket* pPacket);
+    void Disconnect(unsigned long long sessionID);
     void netProc_Send(Session* session);
     void netProc_Recv(Session* session);
     bool ProcessPacket(Session* session, char packetType, CPacket* packetData);

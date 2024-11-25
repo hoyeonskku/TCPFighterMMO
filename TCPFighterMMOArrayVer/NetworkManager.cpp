@@ -116,7 +116,6 @@ void NetworkManager::netIOProcess()
 	int addrLen = sizeof(clientAddr);
 	Session* sessionArray = SessionManager::GetInstance()->GetSessionArray();
 
-	DWORD sessionCount = SessionManager::GetInstance()->_sessionCount;
 
 	struct timeval timeout;
 	timeout.tv_sec = 0;  // 초 단위 설정
@@ -130,8 +129,6 @@ void NetworkManager::netIOProcess()
 
 	int setIndex = 0;
 	int isSetIndex = 0;
-
-	// 64개 세션씩 순회
 
 	while (setIndex != SESSIONMAXCOUNT)
 	{
@@ -159,7 +156,7 @@ void NetworkManager::netIOProcess()
 		}
 
 		SelectRetval = select(0, &rSet, &wSet, nullptr, &timeout);
-		if (SelectRetval == -1)
+		if (SelectRetval == -1) 
 		{
 			SelectError = WSAGetLastError();
 			_LOG(dfLOG_LEVEL_ERROR, L"select() error, code %d", SelectError);
@@ -183,16 +180,21 @@ void NetworkManager::netIOProcess()
 			isSetSession = &sessionArray[isSetIndex];
 			if (FD_ISSET(isSetSession->socket, &rSet))
 			{
+				if (isSetSession->useFlag == false)
+				{
+					DebugBreak();
+				}
 				SelectRetval--;
-				FD_CLR(isSetSession->socket, &rSet);
 				netProc_Recv(isSetSession);
 			}
 			if (FD_ISSET(isSetSession->socket, &wSet))
 			{
+				if (isSetSession->useFlag == false)
+				{
+					DebugBreak();
+				}
 				SelectRetval--;
-				FD_CLR(isSetSession->socket, &wSet);
 				netProc_Send(isSetSession);
-				
 			}
 			isSetIndex++;
 
@@ -242,34 +244,44 @@ void NetworkManager::netProc_Accept()
 	}
 }
 
-void NetworkManager::SendUnicast(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket)
+void NetworkManager::SendUnicast(unsigned long long sessionID, st_PACKET_HEADER* pHeader, CPacket* pPacket)
 {
+
+	unsigned short index = SessionManager::GetInstance()->GetIndexBySessionID(sessionID);
+	Session* session = SessionManager::GetInstance()->GetSessionByIndex(index);
+	if (session->useFlag == false)
+		DebugBreak();
 	session->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
 	if (pHeader->byCode != 0x89)
 		DebugBreak();
 	int size = session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
 }
 
-void NetworkManager::SendBroadCast(Session* elseSession, st_PACKET_HEADER* pHeader, CPacket* pPacket)
-{
-	for (int i = 0; i < SessionManager::GetInstance()->_sessionCount; i++)
-	{
-		Session* session = SessionManager::GetInstance()->GetSessionByIndex(i);
-		if (session->deathFlag == true || session == elseSession)
-			continue;
+//void NetworkManager::SendBroadCast(unsigned long long elseSessionID, st_PACKET_HEADER* pHeader, CPacket* pPacket)
+//{
+//	short elseIndex = SessionManager::GetInstance()->GetIndexBySessionID(elseSessionID);
+//	Session* elseSession = SessionManager::GetInstance()->GetSessionByIndex(elseIndex);
+//	for (int i = 0; i < SessionManager::GetInstance()->GetSessionCount(); i++)
+//	{
+//		Session* session = SessionManager::GetInstance()->GetSessionByIndex(i);
+//		if (session->deathFlag == true || session == elseSession)
+//			continue;
+//
+//		session->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
+//		if (pHeader->byCode != 0x89)
+//			DebugBreak();
+//		session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
+//	}
+//}
 
-		session->sendBuffer->Enqueue((char*)pHeader, sizeof(st_PACKET_HEADER));
-		if (pHeader->byCode != 0x89)
-			DebugBreak();
-		session->sendBuffer->Enqueue(pPacket->GetBufferPtr(), (int)pHeader->bySize);
-	}
-}
-
-void NetworkManager::Disconnect(Session* session)
+void NetworkManager::Disconnect(unsigned long long sessionID)
 {
+
+	unsigned short index = SessionManager::GetInstance()->GetIndexBySessionID(sessionID);
+	Session* session = &SessionManager::GetInstance()->GetSessionArray()[index];
+
 	if (session->deathFlag == true)
 		return;
-	// 지연 삭제를 위해 셋에 등록
 	session->deathFlag = true;
 }
 
@@ -291,7 +303,7 @@ void NetworkManager::netProc_Recv(Session* session)
 	if (RecvRetval == 0)
 	{
 		_LOG(dfLOG_LEVEL_ERROR, L"Recv() 0 Disconnect.");
-		Disconnect(session);
+		Disconnect(session->sessionID);
 		return;
 	}
 	if (RecvRetval == SOCKET_ERROR)
@@ -301,13 +313,13 @@ void NetworkManager::netProc_Recv(Session* session)
 		if (RecvError == WSAECONNABORTED)
 		{
 			//_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNABORTED Disconnect %d.", RecvError);
-			Disconnect(session);
+			Disconnect(session->sessionID);
 			return;
 		}
 		if (RecvError == WSAECONNRESET)
 		{
 			//_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNRESET Disconnect %d.", RecvError);
-			Disconnect(session);
+			Disconnect(session->sessionID);
 			return;
 		}
 		// 나머지 에러 체크를 위해 서버 셧다운
@@ -323,66 +335,63 @@ void NetworkManager::netProc_Recv(Session* session)
 	debugLog._moveRearValue = RecvRetval;
 	session->recvBuffer->_debugLogList.push_back(debugLog);*/
 
-	char arr[4096];
-	session->recvBuffer->Dequeue(arr, RecvRetval);
-	session->sendBuffer->Enqueue(arr, RecvRetval);
-	//while (true)
-	//{
-	//	// 헤더만큼 읽을 수 있으면
-	//	if (session->recvBuffer->GetUseSize() >= sizeof(st_PACKET_HEADER))
-	//	{
-	//		st_PACKET_HEADER header;
+	while (true)
+	{
+		// 헤더만큼 읽을 수 있으면
+		if (session->recvBuffer->GetUseSize() >= sizeof(st_PACKET_HEADER))
+		{
+			st_PACKET_HEADER header;
 
-	//		int ret = session->recvBuffer->Peek((char*)&header, sizeof(st_PACKET_HEADER));
+			int ret = session->recvBuffer->Peek((char*)&header, sizeof(st_PACKET_HEADER));
 
-	//		if (session->recvBuffer->GetUseSize() < header.bySize + sizeof(st_PACKET_HEADER))
-	//			break;
-	//		session->recvBuffer->MoveFront(sizeof(st_PACKET_HEADER));
+			if (session->recvBuffer->GetUseSize() < header.bySize + sizeof(st_PACKET_HEADER))
+				break;
+			session->recvBuffer->MoveFront(sizeof(st_PACKET_HEADER));
 
-	//		CPacket* packet = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
-	//		packet->Clear();
+			CPacket* packet = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
+			packet->Clear();
 
-	//		char* packetData = packet->GetBufferPtr();
-	//		// 디버깅용 코드
-	//		/*DebugLog debugLog1;
-	//		debugLog1._prevFront = session->recvBuffer->_front;
-	//		debugLog1._prevRear = session->recvBuffer->_rear;*/
-	//		// 사이즈보다 경계까지의 값이 작다면
-	//		if (session->recvBuffer->DirectDequeueSize() < header.bySize)
-	//		{
-	//			int freeSize = session->recvBuffer->DirectDequeueSize();
-	//			int remainLength = header.bySize - freeSize;
-	//			memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), freeSize);
-	//			session->recvBuffer->MoveFront(freeSize);
+			char* packetData = packet->GetBufferPtr();
+			// 디버깅용 코드
+			/*DebugLog debugLog1;
+			debugLog1._prevFront = session->recvBuffer->_front;
+			debugLog1._prevRear = session->recvBuffer->_rear;*/
+			// 사이즈보다 경계까지의 값이 작다면
+			if (session->recvBuffer->DirectDequeueSize() < header.bySize)
+			{
+				int freeSize = session->recvBuffer->DirectDequeueSize();
+				int remainLength = header.bySize - freeSize;
+				memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), freeSize);
+				session->recvBuffer->MoveFront(freeSize);
 
-	//			memcpy((packetData)+freeSize, session->recvBuffer->GetFrontBufferPtr(), remainLength);
-	//			session->recvBuffer->MoveFront(remainLength);
-	//		}
-	//		// 충분히 읽을 수 있으면
-	//		else
-	//		{
-	//			memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), header.bySize);
-	//			session->recvBuffer->MoveFront(header.bySize);
-	//		}
+				memcpy((packetData)+freeSize, session->recvBuffer->GetFrontBufferPtr(), remainLength);
+				session->recvBuffer->MoveFront(remainLength);
+			}
+			// 충분히 읽을 수 있으면
+			else
+			{
+				memcpy(packetData, session->recvBuffer->GetFrontBufferPtr(), header.bySize);
+				session->recvBuffer->MoveFront(header.bySize);
+			}
 
-	//		packet->MoveWritePos(header.bySize);
-	//		// 디버깅용 코드
-	//		/*debugLog1._currentFront = session->recvBuffer->_front;
-	//		debugLog1._currentRear = session->recvBuffer->_rear;
-	//		debugLog1._moveFrontValue = header.bySize;
-	//		session->recvBuffer->_debugLogList.push_back(debugLog1);*/
-	//		// 패킷 처리
-	//		if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, packet))
-	//		{
-	//			_LOG(dfLOG_LEVEL_ERROR, L"ProcessPacket Error, sessionId : %d", session->sessionID);
-	//			Disconnect(session);
-	//		}
+			packet->MoveWritePos(header.bySize);
+			// 디버깅용 코드
+			/*debugLog1._currentFront = session->recvBuffer->_front;
+			debugLog1._currentRear = session->recvBuffer->_rear;
+			debugLog1._moveFrontValue = header.bySize;
+			session->recvBuffer->_debugLogList.push_back(debugLog1);*/
+			// 패킷 처리
+			if (!NetworkManager::GetInstance()->ProcessPacket(session, header.byType, packet))
+			{
+				_LOG(dfLOG_LEVEL_ERROR, L"ProcessPacket Error, sessionId : %d", session->sessionID);
+				Disconnect(session->sessionID);
+			}
 
-	//		SerializingBufferManager::GetInstance()->_cPacketPool.Free(packet);
-	//	}
-	//	else
-	//		break;
-	//}
+			SerializingBufferManager::GetInstance()->_cPacketPool.Free(packet);
+		}
+		else
+			break;
+	}
 }
 
 void NetworkManager::netProc_Send(Session* session)
@@ -413,13 +422,13 @@ void NetworkManager::netProc_Send(Session* session)
 			if (SendError == WSAECONNABORTED)
 			{
 				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
-				Disconnect(session);
+				Disconnect(session->sessionID);
 				return;
 			}
 			if (SendError == WSAECONNRESET)
 			{
 				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
-				Disconnect(session);
+				Disconnect(session->sessionID);
 				return;
 			}
 			// 이외의 경우 서버 셧다운
@@ -453,13 +462,13 @@ void NetworkManager::netProc_Send(Session* session)
 			if (SendError == WSAECONNABORTED)
 			{
 				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
-				Disconnect(session);
+				Disconnect(session->sessionID);
 				return;
 			}
 			if (SendError == WSAECONNRESET)
 			{
 				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
-				Disconnect(session);
+				Disconnect(session->sessionID);
 				return;
 			}
 			// 이외의 경우 서버 셧다운

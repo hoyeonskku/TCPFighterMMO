@@ -6,19 +6,32 @@ class Session;
 class Player
 {
 public:
-	Session* session = nullptr;
-	DWORD sessionID;
+	unsigned long long _sessionID;
+
 	short x, y;
 	char dir;
 	char hp;
 	bool moveFlag = false;
+	bool useFlag = false;
 
 	SectorPos sectorPos;
 	DWORD lastProcTime;
+	Session* session;
+	
 
 	void Update();
 
-	void Clear(){};
+	void Clear()
+	{
+		moveFlag = false;
+	};
+
+
+
+	short GetIndex()
+	{
+		return static_cast<USHORT>((_sessionID >> 48) & 0xFFFF);
+	}
 
 	static const int direction[8][2];
 	static const int sectorDir[9][2];

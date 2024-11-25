@@ -23,10 +23,10 @@ const int Player::direction[8][2] = { {0, -6}, {-4, -6}, {-4, 0}, {-4, 6}, {0, 6
 // 세선 생성시 이 콜백함수가 실행됨
 void CreatePlayer(Session* session)
 {
-	Player* player = ObjectManager::GetInstance()->playerPool.Alloc();
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
 	player->Clear();
-	player->hp = 8;
-	player->sessionID = session->sessionID;
+	player->hp = 100;
+	player->_sessionID = session->sessionID;
 	player->dir = dfPACKET_MOVE_DIR_LL;
 	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP - 1;
 	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT - 1;
@@ -46,8 +46,8 @@ void CreatePlayer(Session* session)
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(CreateMyCharacterPacket);
 
 	// 내 캐릭터 생성
-	NetworkManager::GetInstance()->SendUnicast(session, &CreateMyCharacterHeader, CreateMyCharacterPacket);
-	ObjectManager::GetInstance()->AddPlayer(player);
+	NetworkManager::GetInstance()->SendUnicast(session->sessionID, &CreateMyCharacterHeader, CreateMyCharacterPacket);
+	ObjectManager::GetInstance()->CreatePlayer(session->sessionID);
 
 	CPacket* BroadcastMyCharacterToOthersPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
 	BroadcastMyCharacterToOthersPacket->Clear();
@@ -55,7 +55,7 @@ void CreatePlayer(Session* session)
 	mpCreateOtherCharacter(&BroadcastMyCharacterToOthersHeader, BroadcastMyCharacterToOthersPacket, session->sessionID, player->dir, player->x, player->y, player->hp);
 
 	// 내 캐릭터 생성 전파
-	SectorManager::GetInstance()->SendAround(session, &BroadcastMyCharacterToOthersHeader, BroadcastMyCharacterToOthersPacket);
+	SectorManager::GetInstance()->SendAround(session->sessionID, &BroadcastMyCharacterToOthersHeader, BroadcastMyCharacterToOthersPacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(BroadcastMyCharacterToOthersPacket);
 
 	// 다른 캐릭터 생성
@@ -64,14 +64,14 @@ void CreatePlayer(Session* session)
 		int dy = player->sectorPos.y + Player::sectorDir[i][0];
 		int dx = player->sectorPos.x + Player::sectorDir[i][1];
 		const auto& playerUSet = SectorManager::GetInstance()->GetSectorPlayerSet(dy, dx);
-		
+
 		for (Player* searchedPlayer : playerUSet)
 		{
 			CPacket* CreateOtherCharacterPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
 			CreateOtherCharacterPacket->Clear();
 			st_PACKET_HEADER CreateOtherCharacterHeader;
 			mpCreateOtherCharacter(&CreateOtherCharacterHeader, CreateOtherCharacterPacket, searchedPlayer->session->sessionID, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->hp);
-			NetworkManager::GetInstance()->SendUnicast(session, &CreateOtherCharacterHeader, CreateOtherCharacterPacket);
+			NetworkManager::GetInstance()->SendUnicast(session->sessionID, &CreateOtherCharacterHeader, CreateOtherCharacterPacket);
 			SerializingBufferManager::GetInstance()->_cPacketPool.Free(BroadcastMyCharacterToOthersPacket);
 			// 움직이는 플레이어인 경우 무브 패킷도 보내줌
 			if (searchedPlayer->moveFlag == true)
@@ -81,7 +81,7 @@ void CreatePlayer(Session* session)
 				CPacket* pMovePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
 				pMovePacket->Clear();
 				mpMoveStart(&pMoveHeader, pMovePacket, searchedPlayer->dir, searchedPlayer->x, searchedPlayer->y, searchedPlayer->session->sessionID);
-				NetworkManager::GetInstance()->SendUnicast(session, &pMoveHeader, pMovePacket);
+				NetworkManager::GetInstance()->SendUnicast(session->sessionID, &pMoveHeader, pMovePacket);
 				SerializingBufferManager::GetInstance()->_cPacketPool.Free(pMovePacket);
 			}
 		}
@@ -98,14 +98,13 @@ void DeletePlayer(Session* session)
 	deletePacket->Clear();
 	st_PACKET_HEADER deleteHeader;
 	mpDelete(&deleteHeader, deletePacket, session->sessionID);
-	SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket);
+	SectorManager::GetInstance()->SendAround(session->sessionID, &deleteHeader, deletePacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
 
-	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
-	// 섹터에 제거, 플레이어 맵에서 제거
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
+	// 섹터에서 제거, 플레이어 제거
 	SectorManager::GetInstance()->DeletePlayerInSector(player);
-	ObjectManager::GetInstance()->DeletePlayer(player);
-	ObjectManager::GetInstance()->playerPool.Free(player);
+	ObjectManager::GetInstance()->DeletePlayer(session->sessionID);
 }
 
 void Player::Update()
@@ -113,7 +112,7 @@ void Player::Update()
 	DWORD currentTick = TimeManager::GetInstance()->GetCurrentTick();
 	if (currentTick - lastProcTime >= dfNETWORK_PACKET_RECV_TIMEOUT)
 	{
-		NetworkManager::GetInstance()->Disconnect(session);
+		NetworkManager::GetInstance()->Disconnect(session->sessionID);
 		//_LOG(dfLOG_LEVEL_DEBUG, L"Timeout Disconnect, sessionID: %d, time : %d ms", session->sessionID, currentTick - lastProcTime);
 		return;
 	}

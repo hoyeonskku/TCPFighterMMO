@@ -18,8 +18,8 @@ public:
 		return &Sys;
 	}
 	void Init();
-	void SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int x, int y, Session* elseSession = nullptr);
-	void SendAround(Session* session, st_PACKET_HEADER* pHeader, CPacket* pPacket, bool bSendMe = false);
+	void SendSector(st_PACKET_HEADER* pHeader, CPacket* pPacket, int x, int y, unsigned long long sessionID = -1);
+	void SendAround(unsigned long long sessionID, st_PACKET_HEADER* pHeader, CPacket* pPacket, bool bSendMe = false);
 	void SectorMove(Player* player);
 	void InsertPlayerInSector(Player* player);
 	void DeletePlayerInSector(Player* player);

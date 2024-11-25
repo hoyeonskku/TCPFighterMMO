@@ -101,12 +101,13 @@ public:
 		{
 			_LOG(dfLOG_LEVEL_ERROR, L"RingBuffer Overflow");
 			DebugBreak();
+
 			return 0; // 데이터 추가를 방지
 		}
 //#endif
-		/*DebugLog debugLog;
-		debugLog._prevFront = _front;
-		debugLog._prevRear = _rear;*/
+		//DebugLog debugLog;
+		//debugLog._prevFront = _front;
+		//debugLog._prevRear = _rear;
 
 		int freeSize = GetFreeSize();
 		//if (freeSize < iSize)
@@ -125,10 +126,10 @@ public:
 			_rear = (_rear + iSize) % _capacity;
 		}
 
-		/*debugLog._currentFront = _front;
-		debugLog._currentRear = _rear;
-		debugLog._moveRearValue = iSize;
-		_debugLogList.push_back(debugLog);*/
+		//debugLog._currentFront = _front;
+		//debugLog._currentRear = _rear;
+		//debugLog._moveRearValue = iSize;
+		//_debugLogList.push_back(debugLog);
 		return iSize;
 	}
 
@@ -140,9 +141,9 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	int	Dequeue(char* chpDest, int iSize)
 	{
-		/*DebugLog debugLog;
-		debugLog._prevFront = _front;
-		debugLog._prevRear = _rear;*/
+		//DebugLog debugLog;
+		//debugLog._prevFront = _front;
+		//debugLog._prevRear = _rear;
 		int size = GetUseSize();
 		//if (size < iSize)
 		//	iSize = size; // 요청한 크기보다 실제 데이터 크기가 작을 경우
@@ -160,10 +161,10 @@ public:
 			_front = (_front + iSize) % _capacity;
 		}
 
-		/*debugLog._currentFront = _front;
-		debugLog._currentRear = _rear;
-		debugLog._moveFrontValue = iSize;
-		_debugLogList.push_back(debugLog);*/
+		//debugLog._currentFront = _front;
+		//debugLog._currentRear = _rear;
+		//debugLog._moveFrontValue = iSize;
+		//_debugLogList.push_back(debugLog);
 
 		return iSize;
 	}

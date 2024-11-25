@@ -7,11 +7,11 @@
 
 void ObjectManager::Update()
 {
-	if (TimeManager::GetInstance()->CheckLogicFrameTime())
+	for (int i = 0; i < PLAYERMAXCOUNT; i++)
 	{
-		for (auto& pair : ObjectMap)
-			pair.second->Update();
-		// 로그 버퍼 지연처리 -> 시스템콜 최소화
-		FlushLogBuffer();
+		if (_playerArray[i].useFlag == true)
+			_playerArray[i].Update();
 	}
+	// 로그 버퍼 지연처리 -> 시스템콜 최소화
+	FlushLogBuffer();
 }

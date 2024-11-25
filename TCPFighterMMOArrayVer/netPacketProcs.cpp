@@ -33,7 +33,7 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	unsigned short x;
 	unsigned short y;
 
-	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	*pPacket >> Direction >> x >> y;
 
@@ -66,16 +66,16 @@ bool netPacketProc_MoveStart(Session* session, CPacket* pPacket)
 	st_PACKET_HEADER pMoveHeader;
 	CPacket* pMovePacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
 	pMovePacket->Clear();
-	mpMoveStart(&pMoveHeader, pMovePacket, Direction, player->x, player->y, player->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &pMoveHeader, pMovePacket);
+	mpMoveStart(&pMoveHeader, pMovePacket, Direction, player->x, player->y, player->_sessionID);
+	SectorManager::GetInstance()->SendAround(player->_sessionID, &pMoveHeader, pMovePacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(pMovePacket);
-	
+
 	return true;
 }
 
 bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 {
-	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
 	/*if (player->moveFlag == false)
 		DebugBreak();*/
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
@@ -117,8 +117,8 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 	CPacket* scMoveStopPacket = SerializingBufferManager::GetInstance()->_cPacketPool.Alloc();
 	scMoveStopPacket->Clear();
 	st_PACKET_HEADER scMoveStopHeader;
-	mpMoveStop(&scMoveStopHeader,scMoveStopPacket, Direction, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &scMoveStopHeader, scMoveStopPacket);
+	mpMoveStop(&scMoveStopHeader, scMoveStopPacket, Direction, player->x, player->y, session->sessionID);
+	SectorManager::GetInstance()->SendAround(player->_sessionID, &scMoveStopHeader, scMoveStopPacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(scMoveStopPacket);
 
 	return true;
@@ -126,7 +126,7 @@ bool netPacketProc_MoveStop(Session* session, CPacket* pPacket)
 
 bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 {
-	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 	unsigned char Direction = 0;
 	unsigned short x = 0;
@@ -140,7 +140,7 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 	sendAttackPacket->Clear();
 	st_PACKET_HEADER sendAttackHeader;
 	mpAttack1(&sendAttackHeader, sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, sendAttackPacket);
+	SectorManager::GetInstance()->SendAround(player->_sessionID, &sendAttackHeader, sendAttackPacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendAttackPacket);
 	// 피격 대상 탐색
 	Player* targetPlayer = nullptr;
@@ -201,7 +201,7 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 					damagePacket->Clear();
 					st_PACKET_HEADER damageHeader;
 					mpDamage(&damageHeader, damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
-					SectorManager::GetInstance()->SendAround(session, &damageHeader, damagePacket, true);
+					SectorManager::GetInstance()->SendAround(session->sessionID, &damageHeader, damagePacket, true);
 					SerializingBufferManager::GetInstance()->_cPacketPool.Free(damagePacket);
 					// 죽은 경우
 					if (targetPlayer->hp <= 0)
@@ -211,9 +211,9 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 						deletePacket->Clear();
 						st_PACKET_HEADER deleteHeader;
 						mpDelete(&deleteHeader, deletePacket, targetPlayer->session->sessionID);
-						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
+						SectorManager::GetInstance()->SendAround(session->sessionID, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
-						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);  
+						NetworkManager::GetInstance()->Disconnect(targetPlayer->_sessionID);
 						//_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
@@ -227,7 +227,7 @@ bool netPacketProc_Attack1(Session* session, CPacket* pPacket)
 
 bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 {
-	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 
 	unsigned char Direction = 0;
@@ -242,7 +242,7 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 	sendAttackPacket->Clear();
 	st_PACKET_HEADER sendAttackHeader;
 	mpAttack2(&sendAttackHeader, sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, sendAttackPacket);
+	SectorManager::GetInstance()->SendAround(player->_sessionID, &sendAttackHeader, sendAttackPacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendAttackPacket);
 	// 피격 대상 탐색
 	Player* targetPlayer = nullptr;
@@ -304,7 +304,7 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 					damagePacket->Clear();
 					st_PACKET_HEADER damageHeader;
 					mpDamage(&damageHeader, damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
-					SectorManager::GetInstance()->SendAround(session, &damageHeader, damagePacket, true);
+					SectorManager::GetInstance()->SendAround(session->sessionID, &damageHeader, damagePacket, true);
 					SerializingBufferManager::GetInstance()->_cPacketPool.Free(damagePacket);
 					// 죽은 경우
 					if (targetPlayer->hp <= 0)
@@ -314,9 +314,9 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 						deletePacket->Clear();
 						st_PACKET_HEADER deleteHeader;
 						mpDelete(&deleteHeader, deletePacket, targetPlayer->session->sessionID);
-						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
+						SectorManager::GetInstance()->SendAround(session->sessionID, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
-						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
+						NetworkManager::GetInstance()->Disconnect(targetPlayer->_sessionID);
 						//_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
@@ -331,7 +331,7 @@ bool netPacketProc_Attack2(Session* session, CPacket* pPacket)
 
 bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 {
-	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 
 	unsigned char Direction = 0;
@@ -346,7 +346,7 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 	sendAttackPacket->Clear();
 	st_PACKET_HEADER sendAttackHeader;
 	mpAttack3(&sendAttackHeader, sendAttackPacket, player->dir, player->x, player->y, session->sessionID);
-	SectorManager::GetInstance()->SendAround(player->session, &sendAttackHeader, sendAttackPacket);
+	SectorManager::GetInstance()->SendAround(player->_sessionID, &sendAttackHeader, sendAttackPacket);
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendAttackPacket);
 	// 피격 대상 탐색
 	Player* targetPlayer = nullptr;
@@ -408,7 +408,7 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 					damagePacket->Clear();
 					st_PACKET_HEADER damageHeader;
 					mpDamage(&damageHeader, damagePacket, session->sessionID, targetPlayer->session->sessionID, targetPlayer->hp);
-					SectorManager::GetInstance()->SendAround(session, &damageHeader, damagePacket, true);
+					SectorManager::GetInstance()->SendAround(session->sessionID, &damageHeader, damagePacket, true);
 					SerializingBufferManager::GetInstance()->_cPacketPool.Free(damagePacket);
 					// 죽은 경우
 					if (targetPlayer->hp <= 0)
@@ -418,9 +418,9 @@ bool netPacketProc_Attack3(Session* session, CPacket* pPacket)
 						deletePacket->Clear();
 						st_PACKET_HEADER deleteHeader;
 						mpDelete(&deleteHeader, deletePacket, targetPlayer->session->sessionID);
-						SectorManager::GetInstance()->SendAround(session, &deleteHeader, deletePacket, true);
+						SectorManager::GetInstance()->SendAround(session->sessionID, &deleteHeader, deletePacket, true);
 						SerializingBufferManager::GetInstance()->_cPacketPool.Free(deletePacket);
-						NetworkManager::GetInstance()->Disconnect(targetPlayer->session);
+						NetworkManager::GetInstance()->Disconnect(targetPlayer->_sessionID);
 						//_LOG(dfLOG_LEVEL_DEBUG, L"player death disconnect, sessionID: %d", session->sessionID);
 					}
 					return true;
@@ -438,14 +438,14 @@ bool netPacketProc_Echo(Session* session, CPacket* packet)
 	st_PACKET_HEADER sendEchoHeader;
 	unsigned int time;
 
-	Player* player = ObjectManager::GetInstance()->FindPlayer(session->sessionID);
+	Player* player = ObjectManager::GetInstance()->GetPlayer(session->sessionID);
 	player->lastProcTime = TimeManager::GetInstance()->GetCurrentTick();
 
 	*packet >> time;
 
 	// 헤더 및 페이로드 생성 및 전송
 	mpEcho(&sendEchoHeader, sendEchoPacket, time);
-	NetworkManager::GetInstance()->SendUnicast(session, &sendEchoHeader, sendEchoPacket);
+	NetworkManager::GetInstance()->SendUnicast(session->sessionID, &sendEchoHeader, sendEchoPacket);
 
 	SerializingBufferManager::GetInstance()->_cPacketPool.Free(sendEchoPacket);
 	return true;

@@ -12,15 +12,13 @@ private:
 		for (int i = 0; i < SESSIONMAXCOUNT; i++)
 		{
 			_freeArray[i] = i;
-			_sessionArray[i]._sessionIndex = i;
 		}
 	};
 	~SessionManager() {};
 
 	//std::unordered_map<int, Session*> _sessionMap;
 	Session _sessionArray[SESSIONMAXCOUNT];
-	int _freeArray[SESSIONMAXCOUNT];
-	int _freeIndex = 0;
+	unsigned long long _freeArray[SESSIONMAXCOUNT];
 
 	// 지연 삭제될 세션 리스트
 	//std::list<int> _toDeletedSessionId;
@@ -29,6 +27,8 @@ private:
 	// 세션 생성 및 삭제 시에 사용될 콜백, 컨텐츠에서 정의
 	void (*sessionDeleteCallback)(Session*) = nullptr;
 	void (*sessionCreateCallback)(Session*) = nullptr;
+
+	int _sessionCount = 0;
 
 public:
 	static SessionManager* GetInstance(void)
@@ -44,39 +44,39 @@ public:
 		sessionDeleteCallback = deleteCallback;
 	}
 
+	short GetIndexBySessionID(unsigned long long sessionID)
+	{
+		return static_cast<USHORT>((sessionID >> 48) & 0xFFFF);
+	}
+
 	Session* CreateSession()
 	{
-		Session* newSession = &_sessionArray[_freeArray[_freeIndex]];
-		_freeIndex++;
-		newSession->Clear();
-
-		newSession->sessionID = _id++;
-		newSession->useFlag = true;
-		//if (sessionCreateCallback)
-		//{
-		//	sessionCreateCallback(newSession);  // 콜백 함수 호출
-		//}
+		Session* newSession = &_sessionArray[_freeArray[_sessionCount]];
+		newSession->Clear(_freeArray[_sessionCount]);
 		_sessionCount++;
+
+		newSession->useFlag = true;
+		if (sessionCreateCallback)
+		{
+			sessionCreateCallback(newSession);  // 콜백 함수 호출
+		}
 		return newSession;
 	}
 
 	// 세션 삭제시 플레이어 삭제 콜백을 호출
 	bool DeleteSession(Session* session)
 	{
-		//if (sessionDeleteCallback)
-		//{
-		//	sessionDeleteCallback(session);  // 콜백 함수 호출
-		//}
 		// 세션 반납
-		--_freeIndex;
-		_freeArray[_freeIndex] = session->_sessionIndex;
+		--_sessionCount;
+		_freeArray[_sessionCount] = static_cast<USHORT>((session->sessionID >> 48) & 0xFFFF);
+		if (sessionDeleteCallback)
+		{
+			sessionDeleteCallback(session);  // 콜백 함수 호출
+		}
 		session->useFlag = false;
 		session->deathFlag = false;
 		closesocket(session->socket);
 		session->socket = INVALID_SOCKET;
-		_sessionCount--;
-		if (_sessionCount < 0)
-			DebugBreak();
 		return true;
 	}
 
@@ -87,6 +87,8 @@ public:
 			if (session.deathFlag == true)
 				DeleteSession(&session);
 	}
+	
+	int GetSessionCount() { return _sessionCount; }
 
 public:
 	//std::unordered_map<int, Session*>& GetSessionMap() { return _sessionMap; }
@@ -94,5 +96,5 @@ public:
 	Session* GetSessionArray() { return _sessionArray;  }
 	// 세션 아이디 발급용
 	int _id = 0;
-	int _sessionCount = 0;
+
 };

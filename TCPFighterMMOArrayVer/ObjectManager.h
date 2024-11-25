@@ -1,16 +1,29 @@
 #pragma once
-#include <unordered_map>
+//#include <unordered_map>
 #include "Player.h"
 #include "CObjectPool.h"
+#include "SessionManager.h"
 
+#define PLAYERMAXCOUNT 8000
 
 class ObjectManager
 {
 private:
-	ObjectManager() {};
+	ObjectManager() 
+	{
+		for (int i = 0; i < PLAYERMAXCOUNT; i++)
+		{
+			_freeArray[i] = i;
+		}
+	};
 	~ObjectManager() {};
 
-	std::unordered_map<int, Player*> ObjectMap;
+	//std::unordered_map<int, Player*> ObjectMap;
+
+	//std::unordered_map<int, Session*> _sessionMap;
+	Player _playerArray[PLAYERMAXCOUNT];
+	int _freeArray[PLAYERMAXCOUNT];
+	int _playerCount = 0;
 
 public:
 	static ObjectManager* GetInstance(void)
@@ -19,39 +32,30 @@ public:
 		return &Sys;
 	}
 
-	Player* FindPlayer(int sessionID)
+	Player* CreatePlayer(unsigned long long sessionID)
 	{
-		const auto& it = ObjectMap.find(sessionID);
-
-		if (it != ObjectMap.end())
-			return it->second;
-
-		return nullptr;
+		unsigned short index = SessionManager::GetInstance()->GetIndexBySessionID(sessionID);
+		_playerArray[index].useFlag = true;
+		_playerArray[index].Clear();
+		return &_playerArray[index];
 	}
 
-	bool AddPlayer(Player* player)
+	Player* GetPlayer(unsigned long long sessionID)
 	{
-		auto it = ObjectMap.find(player->sessionID);
-		if (it != ObjectMap.end())
-			return false;
-
-		ObjectMap.insert(std::make_pair(player->sessionID, player));
-		return true;
+		unsigned short index = SessionManager::GetInstance()->GetIndexBySessionID(sessionID);
+		return &_playerArray[index];
 	}
 
-	bool DeletePlayer(Player* player)
+	bool DeletePlayer(unsigned long long sessionID)
 	{
-		auto it = ObjectMap.find(player->sessionID);
-		if (it == ObjectMap.end())
-			return false;
-
-		ObjectMap.erase(it);
+		unsigned short index = SessionManager::GetInstance()->GetIndexBySessionID(sessionID);
+		_playerArray[index].useFlag = false;
 		return true;
 	}
 
 	void Update();
 
-	CMemoryPool<Player, true> playerPool = CMemoryPool<Player, true>(0);
+	//CMemoryPool<Player, true> playerPool = CMemoryPool<Player, true>(0);
 public:
-	std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }
+	//std::unordered_map<int, Player*>& GetObjectMap() { return ObjectMap; }
 };
