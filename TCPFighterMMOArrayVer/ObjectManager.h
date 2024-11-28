@@ -4,7 +4,7 @@
 #include "CObjectPool.h"
 #include "SessionManager.h"
 
-#define PLAYERMAXCOUNT 8000
+#define PLAYERMAXCOUNT 10300
 
 class ObjectManager
 {
