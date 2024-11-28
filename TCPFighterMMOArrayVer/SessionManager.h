@@ -2,7 +2,7 @@
 #include "Session.h"
 #include "CObjectPool.h"
 
-#define SESSIONMAXCOUNT 8000
+#define SESSIONMAXCOUNT 10300
 
 class SessionManager
 {
