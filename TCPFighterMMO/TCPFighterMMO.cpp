@@ -19,6 +19,9 @@ int main()
 
 	while (!g_bShutdown)
 	{
+
+		if (!TimeManager::GetInstance()->CheckLogicFrameTime())
+			continue;
 		// 네트워크 루프
 		NetworkManager::GetInstance()->netIOProcess();
 		// 컨텐츠 루프

@@ -92,6 +92,8 @@ int NetworkManager::netInit(IPacketProcessor* customProcessor)
 		g_bShutdown = false;
 		return 0;
 	}
+
+	return 0;
 }
 
 void NetworkManager::netCleanUp()
@@ -317,13 +319,13 @@ void NetworkManager::netProc_Recv(Session* session)
 		// 아래 두 경우는 강제로 / 소프트웨어로 인해 소켓이 닫힌 경우
 		if (RecvError == WSAECONNABORTED)
 		{
-			_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNABORTED Disconnect %d.", RecvError);
+			//_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNABORTED Disconnect %d.", RecvError);
 			Disconnect(session);
 			return;
 		}
 		if (RecvError == WSAECONNRESET)
 		{
-			_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNRESET Disconnect %d.", RecvError);
+			//_LOG(dfLOG_LEVEL_ERROR, L"WSAECONNRESET Disconnect %d.", RecvError);
 			Disconnect(session);
 			return;
 		}
@@ -413,9 +415,9 @@ void NetworkManager::netProc_Send(Session* session)
 	if (session->sendBuffer->DirectDequeueSize() >= dataSize)
 	{
 	// 디버깅용 코드
-	DebugLog debugLog;
+	/*DebugLog debugLog;
 	debugLog._prevFront = session->sendBuffer->_front;
-	debugLog._prevRear = session->sendBuffer->_rear;
+	debugLog._prevRear = session->sendBuffer->_rear;*/
 		// 데이터를 한 번에 전송
 		SentBytes = send(session->socket, session->sendBuffer->GetFrontBufferPtr(), dataSize, 0);
 
@@ -426,13 +428,13 @@ void NetworkManager::netProc_Send(Session* session)
 			// 아래 두 경우는 강제로 / 소프트웨어로 인해 소켓이 닫힌 경우
 			if (SendError == WSAECONNABORTED)
 			{
-				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
+				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}
 			if (SendError == WSAECONNRESET)
 			{
-				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
+				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}
@@ -466,13 +468,13 @@ void NetworkManager::netProc_Send(Session* session)
 			// 아래 두 경우는 강제로 / 소프트웨어로 인해 소켓이 닫힌 경우
 			if (SendError == WSAECONNABORTED)
 			{
-				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
+				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNABORTED Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}
 			if (SendError == WSAECONNRESET)
 			{
-				_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
+				//_LOG(dfLOG_LEVEL_ERROR, L"Send Error WSAECONNRESET Disconnect %d., sessionId : %d", SendError, session->sessionID);
 				Disconnect(session);
 				return;
 			}

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.10.34916.146
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TCPFighterMMO", "TCPFighterMMO\TCPFighterMMO.vcxproj", "{C2C8BBDD-3440-4CEE-825D-860DBE7BA01E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TCPFighterMMOArrayVer", "TCPFighterMMOArrayVer\TCPFighterMMOArrayVer.vcxproj", "{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{C2C8BBDD-3440-4CEE-825D-860DBE7BA01E}.Release|x64.Build.0 = Release|x64
 		{C2C8BBDD-3440-4CEE-825D-860DBE7BA01E}.Release|x86.ActiveCfg = Release|Win32
 		{C2C8BBDD-3440-4CEE-825D-860DBE7BA01E}.Release|x86.Build.0 = Release|Win32
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Debug|x64.ActiveCfg = Debug|x64
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Debug|x64.Build.0 = Debug|x64
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Debug|x86.ActiveCfg = Debug|Win32
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Debug|x86.Build.0 = Debug|Win32
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Release|x64.ActiveCfg = Release|x64
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Release|x64.Build.0 = Release|x64
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Release|x86.ActiveCfg = Release|Win32
+		{B4EB1307-A3D4-4C57-9FC4-BADE1970205C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

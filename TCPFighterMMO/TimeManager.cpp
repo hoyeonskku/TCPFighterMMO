@@ -19,6 +19,12 @@ bool TimeManager::CheckLogicFrameTime()
 	if (currentTick > nextTick)
 	{
 		fps++;
+
+		if (currentTick >= nextTick + logicFrameTime)
+		{
+			nextTick = currentTick + ((currentTick - nextTick) % logicFrameTime);
+		}
+
 		if (currentTick - frameTick >= 1000)
 		{
 			// 서버 모니터 출력

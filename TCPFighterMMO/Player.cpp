@@ -25,13 +25,13 @@ void CreatePlayer(Session* session)
 {
 	Player* player = ObjectManager::GetInstance()->playerPool.Alloc();
 	player->Clear();
-	player->hp = 100;
+	player->hp = 1;
 	player->sessionID = session->sessionID;
 	player->dir = dfPACKET_MOVE_DIR_LL;
-	player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP - 1;
-	player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT - 1;
-	//player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
-	//player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
+	//player->y = rand() % (dfRANGE_MOVE_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP - 1;
+	//player->x = rand() % (dfRANGE_MOVE_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT - 1;
+	player->y = rand() % (dfRANGE_SECTOR_BOTTOM - dfRANGE_MOVE_TOP) + dfRANGE_MOVE_TOP;
+	player->x = rand() % (dfRANGE_SECTOR_RIGHT - dfRANGE_MOVE_LEFT) + dfRANGE_MOVE_LEFT;
 	SectorPos pos = SectorManager::GetInstance()->FindSectorPos(player->y, player->x);
 	player->sectorPos.y = pos.y;
 	player->sectorPos.x = pos.x;
@@ -114,7 +114,7 @@ void Player::Update()
 	if (currentTick - lastProcTime >= dfNETWORK_PACKET_RECV_TIMEOUT)
 	{
 		NetworkManager::GetInstance()->Disconnect(session);
-		_LOG(dfLOG_LEVEL_DEBUG, L"Timeout Disconnect, sessionID: %d, time : %d ms", session->sessionID, currentTick - lastProcTime);
+		//_LOG(dfLOG_LEVEL_DEBUG, L"Timeout Disconnect, sessionID: %d, time : %d ms", session->sessionID, currentTick - lastProcTime);
 		return;
 	}
 	if (moveFlag == true)
